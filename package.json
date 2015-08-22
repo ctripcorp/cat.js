@@ -1,0 +1,21 @@
+{
+  "name": "CatNodeClient",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "",
+  "license": "ISC",
+  "apidoc": {
+    "title": "cat node client document"
+  },
+  "scripts": {
+    "test": "node_modules/.bin/jasmine-node test"
+  },
+  "dependencies": {
+    "morgan": "^1.6.1",
+    "sprintf-js": "^1.0.3"
+  },
+  "devDependencies": {
+    "express": "^4.13.3"
+  }
+}
