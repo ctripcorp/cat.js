@@ -14,10 +14,19 @@
 #include <pthread.h>
 #include "manager.h"
 void success_sample();
-
+void test_log_event();
 int main(void) {
 	success_sample();
 	return EXIT_SUCCESS;
+}
+
+void test_log_event(){
+	srand(time(NULL));
+	int r = rand()%30000;
+	char str[15];
+	sprintf(str, "%d", r);
+
+	log_event(str,"name","0","name=stur");
 }
 
 void success_sample(){
@@ -26,18 +35,21 @@ void success_sample(){
 	char str[15];
 	sprintf(str, "%d", r);
 	cat_message *message=new_transaction(str,"name");
-	sleep(2);
-	new_event("event1","name1",message);
-	ts_complete(message);
+	//cat_message *subTx=sub_transaction(str, "sub_trans", message);
+	//cat_message *event = sub_event("event1","name1",message);
+	//add_data(event, "coco=girl&exception=null");
+	//sleep(2);
+	//trans_complete_with_status(subTx,"0");
+	trans_complete_with_status(message,"0");
 }
 #if 0
 void simple_test(){
 	cat_message message=new_transaction("type1","name");
 	cat_transaction *p=message.msg_transaction;
 	cat_message evt0=new_event("event1","name1");
-	p->messageChildren[p->message_children_size] = evt0;
+	p->messageChildren[p->message_children_size] = &evt0;
 	p->message_children_size++;
-	ts_complete(message.msg_transaction);
+	trans_complete(message.msg_transaction,"0");
 }
 
 #endif

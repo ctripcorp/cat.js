@@ -16,8 +16,10 @@
 #include <string.h>
 
 void linux_send(char* buf, int sendsize) {
+	/* debug without network
+	 return;*/
+
 	int sock_cli = socket(AF_INET, SOCK_STREAM, 0);
-	printf("send size:%d\n",sendsize);
 
 	struct sockaddr_in servaddr;
 	memset(&servaddr, 0, sizeof(servaddr));
@@ -35,9 +37,9 @@ void linux_send(char* buf, int sendsize) {
 	//{
 	int i = send(sock_cli, buf, sendsize, 0); ///发送
 	if (i == -1) {
-		printf("fail to send\n");
+		printf("[info]fail to send\n");
 	}else{
-		printf("send success\n");
+		printf("[info]send success\n");
 	}
 	//}
 

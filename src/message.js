@@ -1,43 +1,41 @@
 var addon = require('bindings')('ccat');
-var sprintf=require("sprintf-js").sprintf;
 var debug=true;
 
 function Message(message_id){
-	this._id=message_id;
+	this._id = message_id;
 }
 
 Message.prototype={
 
 	/**
-	 * @api {function call} complete(status) complete
-	 * @apiName complete
+	 * @api {function call} end(status) end
+	 * @apiName end
 	 * @apiGroup Message
-	 * @apiDescription complete a message with status.
+	 * @apiDescription end a message with status.
 	 * @apiParam {String} status message status, set "0" = success, others = fail
 	 * @apiExample {curl} Example usage:
-	 * message.complete();
-	 * message.complete(err);
+	 * message.end();
+	 * message.end(err);
 	 */
-	complete : function(status){
-	 	this._debugLog("message["+this._id.valueOf()+"]"+" complete invoke");
+	end : function(status){
 
 		/*
 		 * if status not defined, set to "0" as success
 		 */
-		 if(!arguments[0]) status = "0";
-
-		addon.glue_complete(this._id,status);
+		if(!arguments[0]) status = "0";
+	
+		return addon.glue_complete(this._id,status);
 	},
 
 	/**
-	 * @api {function call} addData(key[,value]) addData
+	 * @api {function call} addData(key[,value[, ... ]]) addData
 	 * @apiName addData
 	 * @apiGroup Message
 	 * @apiParam {String} key 如果没有传value，key是一个健值对，例如：“name=stur”
 	 * @apiParam {String} value  
 	 * @apiExample {curl} Example usage:
 	 * message.addData("name=stur&sex=boy");
-	 * message.addData("stur","boy");
+	 * message.addData("stur","boy","coco","girl");
 	 */
 	addData : function(key,value){
 	 	this._debugLog("message["+this._id.valueOf()+"]"+" addData invoke");
@@ -47,8 +45,13 @@ Message.prototype={
 	 		keyValuePair=key;
 	 	}
 
-	 	if(arguments.length==2){
-	 		keyValuePair=key+"="+value;
+	 	if(arguments.length%2 == 0 && arguments.length>=2){
+
+	 		for (var i = 0; i <arguments.length; i+=2) {
+	 			var temp=arguments[i]+"="+arguments[i+1];
+	 			keyValuePair+=temp;
+	 		};
+	
 	 	}
 
 		//TODO

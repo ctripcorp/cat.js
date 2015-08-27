@@ -1,21 +1,25 @@
 {
-  "name": "CatNodeClient",
+  "name": "cat",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "author": "",
+  "description": "cat node client",
+  "main": "cat.js",
+  "author": "stur",
   "license": "ISC",
   "apidoc": {
     "title": "cat node client document"
   },
   "scripts": {
-    "test": "node_modules/.bin/jasmine-node test"
+    "test": "jasmine-node --matchAll --captureExceptions test/spec/cat.singleentry.js"
   },
   "dependencies": {
-    "morgan": "^1.6.1",
-    "sprintf-js": "^1.0.3"
+
   },
   "devDependencies": {
-    "express": "^4.13.3"
+    "morgan": "^1.6.1",
+    "sprintf-js": "^1.0.3",
+    "express": "^4.13.3",
+    "grunt-karma": "*",
+    "karma-jasmine": "*",
+    "karma-phantomjs-launcher": "*"
   }
 }

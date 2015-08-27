@@ -1,15 +1,49 @@
-
 var http = require('http');
 var fs=require("fs"); 
-
-var cat = require("../src/cat");
+var cat = require("../../src/cat");
 
 describe("cat client suite",function(){
-	it("sub transaction",function(){
-		var t=cat.span("Type","Name");
-		var ts=t.span("Type","Name");
-		// ...
-		ts.end();
+	it("read file",function(){
+		var fileName='../../src/ccat.cc';
+		var t=cat.span('ReadFile',fileName);
+		fs.readFile(fileName, function(err, data) {
+			if(err){
+			}
+
+			t.end();
+		});	
+	});
+
+	it("timeout",function(){
+		var fileName='../../src/ccat.cc';
+		var t=cat.span('ReadFile',fileName);
+		fs.readFile(fileName, function(err, data) {
+			if(err){
+			}
+			setTimeout(function() {
+           		t.end();
+       		}, 20000);
+		});	
+	});
+
+	it("sub trans",function(){
+		var fileName='../../src/ccat.cc';
+		var t=cat.span('ReadFile',fileName);
+		var subSpan=t.span('ReadFile',fileName);
+		fs.readFile(fileName, function(err, data) {
+			t.event("ReadFile",fileName);
+			if(err){
+			}
+			fs.readFile(fileName, function(err, data) {
+				if(err){
+				}
+				//setTimeout is a  mock for cost 2min to read file
+				setTimeout(function() {
+           			subSpan.end();
+       			}, 2000);
+			});	
+			
+		});	
 		t.end();
 	});
 
@@ -53,7 +87,7 @@ describe("cat client suite",function(){
 				 // ts.timeout(2000)
 				 ts.end();
 				});
-				
+
 		}
 		/*
 		 * t won't send here, it will wait all fork branch finish
@@ -87,8 +121,8 @@ describe("cat client suite",function(){
 		app.get('/', function (req, res) {
 			res.send('hello, world!')
 		});
-		*/
-	});
+	*/
+});
 
 	it("cat express middleware like morgan",function(){
 		/*
@@ -105,8 +139,8 @@ describe("cat client suite",function(){
 		app.post("/", function(req, res){
 	
 		});
-		*/
-	});
+	*/
+});
 
 	it("express middleware",function(){
 		var express = require('express');

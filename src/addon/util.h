@@ -8,6 +8,7 @@
 #ifndef SRC_ADDON_UTIL_H_
 #define SRC_ADDON_UTIL_H_
 
+
 int write_to_buffer_raw(char *buf, char * data, int length, int index);
 int setint_to_buffer_begin(char* buffer, int i);
 void getFormatTime(char** buf);

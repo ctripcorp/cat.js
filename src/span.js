@@ -17,7 +17,7 @@ var Message=require('./message');
  *	app.get('/', function (req, res) {
  *		res.send('hello, world!')
  *	});
- */
+*/
 function Span(message_id){
 	Message.apply(this,arguments);
 
@@ -34,115 +34,82 @@ function Span(message_id){
 
 util.inherits(Span, Message);
 
-var tsProto=Span.prototype;
+var spanProto=Span.prototype;
 
 /**
- * @api {function call} subSpan(type,name) subSpan
- * @apiName subSpan
+ * @api {function call} span(type,name) span
+ * @apiName span
  * @apiGroup Span
  * @apiDescription create a sub span from self.
  * @apiParam {String} type
  * @apiParam {String} name
  * @apiExample {curl} Example usage:
- * var ts_root=cat.newTransaction("Type","Name");
- * var ts_sub=ts_root.subSpan("Type","Name");
+ * var t=cat.newTransaction("Type","Name");
+ * var ts_sub=t.span("Type","Name");
  */
-tsProto.subSpan= function(type,name){
-	this._debugLog("Span["+this._id+"]"+" create subSpan");
-	
-	var sub_ts_id=0;
+ spanProto.span= function(type,name){
 
-	sub_ts_id=addon.glue_subTransaction(this._id,type,name);
-	var subSpan=new Span(sub_ts_id);
-	return subSpan;
-}
+ 	var obj=addon.glue_subTransaction(this._id,type,name);
+
+ 	var span=new Span(obj.pointer);
+
+ 	return span;
+ }
 
 /**
- * @apiDefine fork_join
- *
- * @apiDescription do fork() before an asynchronize call and do join() after callback finish.
- *	fork() 和 join() 总是成对出现
- * @apiExample {curl} Example usage:
- *	var ts_root=cat.new_transaction("Type","Name");
- *	for (var i = 0; i < 10; i++) {
- *		ts_root.fork();
- *		fs.readFile('../src/ccat.cc', function(err, data) {			
- *			//if all branch have join, ts_root will complete self
- *			ts_root.join();
- *		});
- *	}	
- *	//ts_root won't send here, it will wait all fork branch finish
- *	ts_root.complete();
- */
-
-/**
- * @api {function call} fork() fork
- * @apiName fork
- * @apiGroup Span
- * @apiUse fork_join
- */
-tsProto.fork= function(){
-	this._debugLog("Span["+this._id+"]"+" fork invoke");
-	addon.glue_fork(this._id);
-}
-
-/**
- * @api {function call} join() join
- * @apiName join
- * @apiGroup Span
- * @apiUse fork_join
- */
-tsProto.join= function(){
-	this._debugLog("Span["+this._id+"]"+" join invoke");
-
-	addon.glue_join(this._id);
-}
-
-/**
- * @api {function call} logEvent(type,name[,key[,value]]) logEvent
- * @apiName logEvent
+ * @api {function call} event(type,name[,data]) event
+ * @apiName event
  * @apiGroup Span
  * @apiDescription create an event on current span
  * @apiParam {String} type
  * @apiParam {String} name
- * @apiParam {String} key
- * @apiParam {String} value
+ * @apiParam {String} status
+ * @apiParam {String} data
  * @apiExample {curl} Example usage:
- * var ts_root=cat.new_transaction("Type","Name");
- * ts_root.logEvent("Type","Name");
+ * var t=cat.span("Type","Name");
+ * t.event("Type","Name");
  */
- tsProto.logEvent= function(type,name,key,value){
-	this._debugLog("Span["+this._id+"]"+" log event");
-	var event_id=0;
-	
-	event_id=addon.glue_new_event(this._id,type,name);
-	var cat_event=new Message(event_id);
-	if(arguments.length==3){
-		cat_event.addData(key);
-	}
-	if(arguments.length==4){
-		cat_event.addData(key,value);
-	}
-	return cat_event;
-}
+ spanProto.event= function(type,name,status,data){
+
+ 	var event_id = addon.glue_new_event(this._id,type,name);
+ 	var cat_event = new Message(event_id);
+ 	if(arguments.length==3){
+ 		cat_event.addData(data);
+ 	}
+ 	return cat_event;
+ }
 
 /**
- * @api {function call} logError(error) logError
- * @apiName logError
+ * @api {function call} error(error) error
+ * @apiName error
  * @apiGroup Span
  * @apiDescription log an error in this span
  * @apiParam {String} error
  * @apiExample {curl} Example usage:
- * var ts_root=cat.new_transaction("Type","Name");
- * ts_root.logError("Exception");
+ * var t=cat.span("Type","Name");
+ * t.error("Exception");
  */
- tsProto.logError= function(error){
-	this._debugLog("Span["+this._id+"]"+" log event");
-	var exceptionType="Exception";
-	
-	//read exception type from error
-	this.logEvent("Error",exceptionType,"0",error);
-	this.setStatus(exceptionType);
+ spanProto.error= function(error){
+ 	if(error instanceof Error){
+ 		this.event("Error",error.name,"0",error);
+ 	}else{
+ 		//TODO
+ 		//other error?
+ 	}
+ }
+
+/**
+* @api {function call} timeout(timeout) timeout
+* @apiName timeout
+* @apiGroup Span
+* @apiDescription set the timeout in millisecond
+* @apiParam {int} timeout
+* @apiExample {curl} Example usage:
+* var t=cat.span("Type","Name");
+* t.timeout(3000);
+*/
+spanProto.timeout =function(timeout_sec){
+	addon.glue_settimeout(this._id,timeout_sec);
 }
 
 module.exports=Span;

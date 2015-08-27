@@ -1,23 +1,23 @@
 var addon = require('bindings')('ccat');
 var path= require('path');
 var appConfig=require(path.resolve(__dirname,'./appConfig.js'));
-var Transaction=require('./transaction');
+var Span=require('./span');
 
 /**
  * @api {constructor} Cat([optoin]) constructor
  * @apiName Cat
  * @apiGroup Cat
- * @apiDescription create a root transaction in express middleware, and auto complete on request finish
+ * @apiDescription create a root span in express middleware, and auto complete on request finish
  * @apiParam {String} option, always 'combined' 
  * @apiExample {curl} Example usage:
  * var express = require('express');
  * var app = express();
  * //自动在请求的结束埋点，
- * var rootTS = cat.newTransaction('type','name')
+ * var rootTS = cat.span('type','name')
  *		app.use(rootTS('combined')); *	app.get('/', function (req, res) {
  *		res.send('hello, world!')
  *	});
- */
+*/
 function Cat(option) {
 	this._initConfig();
 
@@ -50,26 +50,32 @@ Cat.prototype={
 	},
 
 	/**
-	 * @api {function call} newTransaction(type,name) newTransaction
-	 * @apiName newTransaction
+	 * @api {function call} span(type,name) span
+	 * @apiName span
 	 * @apiGroup Cat
-	 * @apiDescription create a standalone transaction, usually root transaction , this transaction must explicit complete
+	 * @apiDescription create a standalone span, usually root span , this span must explicit complete
 	 * @apiParam {String} type
 	 * @apiParam {String} name
 	 * @apiExample {curl} Example usage:
-	 * var ts_root=cat.newTransaction("Type","Name");
+	 * var ts_root=cat.span("Type","Name");
 	 */
-	newTransaction : function(type,name){
-		var obj=addon.glue_new_transaction("type",name);
-		var msg_id=obj.pointer;
-		console.log("Message ID:",msg_id);
-		var transaction=new Transaction(msg_id);
-		return transaction;
-	},
+	 span : function(type,name,callback){
+
+	 	var obj = addon.glue_new_transaction(type,name);
+
+	 	var span = new Span(obj.pointer);
+
+	 	/* set default timeout */
+	 	if (appConfig['timeout']){
+	 		span.timeout(appConfig['timeout']);
+	 	}
+
+	 	return span;
+	 },
 
 	/**
-	 * @api {function call} logEvent(type,name[,key[,value]]) logEvent
-	 * @apiName logEvent
+	 * @api {function call} event(type,name[,key[,value]]) event
+	 * @apiName event
 	 * @apiGroup Cat
 	 * @apiDescription create an event and send immediatelly
 	 * @apiParam {String} type
@@ -77,11 +83,11 @@ Cat.prototype={
 	 * @apiParam {String} key
 	 * @apiParam {String} value
 	 * @apiExample {curl} Example usage:
-	 * cat.logEvent("type","name");
-	 * cat.logEvent("type","name","key","value");
+	 * cat.event("type","name");
+	 * cat.event("type","name","key","value");
 	 */
-	logEvent : function(type,name,key,value){
-		var keyValuePair;
+	 event : function(type,name,key,value){
+	 	var keyValuePair;
 	 	if(arguments.length==3){
 	 		keyValuePair=key;
 	 	}
@@ -95,22 +101,24 @@ Cat.prototype={
 	},
 
 	/**
-	 * @api {function call} logError(error) logError
-	 * @apiName logError
+	 * @api {function call} error(error) error
+	 * @apiName error
 	 * @apiGroup Cat
 	 * @apiDescription create an error and send immediatelly
 	 * @apiParam {String} error
 	 * @apiExample {curl} Example usage:
-	 * cat.logError("exception");
+	 * cat.error("exception");
 	 */
-	logError : function(error){
-		var exceptionType="Exception";
+	 error : function(error){
+	 	var exceptionType="Exception";
 		//TOTO
 		//read exception type from error
 		//TODO
 		//addon.glue_log_error(exceptionType,keyValuePair);
 	}
+
+
 }
 
-module.exports=new Cat();
+	module.exports=new Cat();
 

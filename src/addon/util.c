@@ -112,7 +112,7 @@ void printIPAddress() {
 
 void init_ip() {
 	extern g_context cat_context;
-	const char* google_dns_server = "8.8.8.8";
+	extern g_config cat_config;
 	int dns_port = 53;
 	struct sockaddr_in serv;
 	int sock = socket( AF_INET, SOCK_DGRAM, 0);
@@ -124,7 +124,8 @@ void init_ip() {
 
 	memset(&serv, 0, sizeof(serv));
 	serv.sin_family = AF_INET;
-	serv.sin_addr.s_addr = inet_addr(google_dns_server);
+
+	serv.sin_addr.s_addr = inet_addr("8.8.8.8"/*cat_config.server*/);
 	serv.sin_port = htons(dns_port);
 
 	int err = connect(sock, (const struct sockaddr*) &serv, sizeof(serv));
@@ -132,7 +133,7 @@ void init_ip() {
 	socklen_t namelen = sizeof(name);
 	err = getsockname(sock, (struct sockaddr*) &name, &namelen);
 	//const char* p = inet_ntop(AF_INET, &name.sin_addr, cat_config.local_ip, 100);
-	printf("Address: %08x (%s)\n", name.sin_addr.s_addr, inet_ntoa(name.sin_addr));
+	printf("Local Address: %08x (%s)\n", name.sin_addr.s_addr, inet_ntoa(name.sin_addr));
 	unsigned char *ip = (unsigned char *)&name.sin_addr.s_addr;
 	sprintf(&cat_context.local_ip_hex[0], "%02x%02x%02x%02x", ip[0], ip[1], ip[2], ip[3]);
 	cat_context.local_ip = inet_ntoa(name.sin_addr);

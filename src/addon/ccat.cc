@@ -6,24 +6,30 @@
 using namespace v8;
 
 char *parse_args(v8::Local<v8::Value> value);
-void glue_inner(const FunctionCallbackInfo<Value>& args,void (*foo)(struct cat_message* ts));
-
+void callback(void* p);
+/*
+ * args[0] <Number> pointer of transaction to complete
+ * args[1] <String> transaction status
+ */
 void glue_complete(const FunctionCallbackInfo<Value>& args) {
 	Isolate* isolate = Isolate::GetCurrent();
 	HandleScope scope(isolate);
 
 	if (args.Length() != 2) {
-		isolate->ThrowException(Exception::TypeError(
-			String::NewFromUtf8(isolate, "Wrong number of arguments")));
+		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
 		return;
 	}
 
-	//long ptr=args[0]->NumberValue();
-	//TODO set status
-	//char* status=parse_args(args[1]);
-	printf("%s\n", "glue_complete");
-	//cat_message* p= reinterpret_cast<cat_message*>(ptr);
-	//ts_complete(p);
+	if(!args[0]->IsNumber() || !args[1]->IsString()){
+		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+		return;
+	}
+
+	long ptr=args[0]->NumberValue();
+	char* status=parse_args(args[1]);
+	
+	cat_message* p= reinterpret_cast<cat_message*>(ptr);
+	trans_complete_with_status(p, status);
 
 	args.GetReturnValue().Set(Number::New(isolate,0));
 }
@@ -46,44 +52,18 @@ void glue_subTransaction(const FunctionCallbackInfo<Value>& args) {
 		return;
 	}
 	long ptr=args[0]->NumberValue();
+	
 	cat_message* p= reinterpret_cast<cat_message*>(ptr);
 	char* type=parse_args(args[1]);
 	char* name=parse_args(args[2]);
 	cat_message *message = sub_transaction(type,name,p);
 
-	printf("%s\n", "glue_subTransaction");
-
-	//return pointer address
 	long rPtr= reinterpret_cast<long>(message);
+
 	Local<Object> obj = Object::New(isolate);
+	//return pointer address
 	obj->Set(String::NewFromUtf8(isolate, "pointer"), Number::New(isolate,rPtr));
 	args.GetReturnValue().Set(obj);
-}
-
-void glue_inner(const FunctionCallbackInfo<Value>& args,void (*foo)(struct cat_message* ts)) {
-	Isolate* isolate = Isolate::GetCurrent();
-	HandleScope scope(isolate);
-
-	if (args.Length() != 1) {
-		isolate->ThrowException(Exception::TypeError(
-			String::NewFromUtf8(isolate, "Wrong number of arguments")));
-		return;
-	}
-
-	printf("%s\n", "glue_inner");
-	long ptr=args[0]->NumberValue();
-	cat_message* p= reinterpret_cast<cat_message*>(ptr);
-	foo(p);
-
-	args.GetReturnValue().Set(Number::New(isolate,0));
-}
-
-void glue_fork(const FunctionCallbackInfo<Value>& args) {
-	glue_inner(args,&ts_fork);
-}
-
-void glue_join(const FunctionCallbackInfo<Value>& args) {
-	glue_inner(args,&ts_join);
 }
 
 void glue_new_event(const FunctionCallbackInfo<Value>& args) {
@@ -96,13 +76,18 @@ void glue_new_event(const FunctionCallbackInfo<Value>& args) {
 		return;
 	}
 
-	printf("%s\n", "glue_new_event");
+	if(!args[0]->IsNumber() || !args[1]->IsString() || !args[2]->IsString()){
+		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+		return;
+	}
+
 	long ptr=args[0]->NumberValue();
+	
 	cat_message* p= reinterpret_cast<cat_message*>(ptr);
 	char* type=parse_args(args[1]);
 	char* name=parse_args(args[2]);
-	cat_message *message = new_event(type,name,p);
-
+	cat_message *message = sub_event(type,name,p);
+	
 	long rPtr= reinterpret_cast<long>(message);
 	Local<Object> obj = Object::New(isolate);
 	obj->Set(String::NewFromUtf8(isolate, "pointer"), Number::New(isolate,rPtr));
@@ -117,19 +102,31 @@ void glue_set_server(const FunctionCallbackInfo<Value>& args) {
 
 }
 
+/*
+ * args[0] <String> transaction type
+ * args[1] <String> transaction name
+ */
 void glue_new_transaction(const FunctionCallbackInfo<Value>& args) {
 	Isolate* isolate = Isolate::GetCurrent();
 	HandleScope scope(isolate);
 
 	if (args.Length() != 2) {
-		isolate->ThrowException(Exception::TypeError(
-			String::NewFromUtf8(isolate, "Wrong number of arguments")));
+		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
 		return;
 	}
+
+	if(!args[0]->IsString() || !args[1]->IsString()){
+		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+		return;
+	}
+
 	char* type=parse_args(args[0]);
 	char* name=parse_args(args[1]);
+
 	cat_message *message = new_transaction(type,name);
+	
 	long ptr= reinterpret_cast<long>(message);
+
 	Local<Object> obj = Object::New(isolate);
 	obj->Set(String::NewFromUtf8(isolate, "pointer"), Number::New(isolate,ptr));
 	args.GetReturnValue().Set(obj);
@@ -143,17 +140,39 @@ void glue_log_error(const FunctionCallbackInfo<Value>& args) {
 
 }
 
+void glue_settimeout(const FunctionCallbackInfo<Value>& args) {
+	Isolate* isolate = Isolate::GetCurrent();
+	HandleScope scope(isolate);
+
+	if (args.Length() != 2) {
+		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
+		return;
+	}
+
+	if(!args[0]->IsNumber() || !args[0]->IsNumber()){
+		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+		return;
+	}
+
+	long ptr = args[0]->NumberValue();
+	int sec = args[1]->NumberValue();
+	cat_message* p= reinterpret_cast<cat_message*>(ptr);
+	settimeout(p,sec);
+
+	args.GetReturnValue().Set(Number::New(isolate,0)); // return 0 as success
+}
+
 void Init(Handle<Object> exports) {
+
 	/* Method Glue */
+    /* glue nodejs and c modules and check paramter illegal */
 	/* message.js */
 	NODE_SET_METHOD(exports, "glue_complete", glue_complete);
 	NODE_SET_METHOD(exports, "glue_add_data", glue_add_data);
 	NODE_SET_METHOD(exports, "glue_set_status", glue_set_status);
 
-	/* transaction.js */
+	/* span.js */
 	NODE_SET_METHOD(exports, "glue_subTransaction", glue_subTransaction);
-	NODE_SET_METHOD(exports, "glue_fork", glue_fork);
-	NODE_SET_METHOD(exports, "glue_join", glue_join);
 	NODE_SET_METHOD(exports, "glue_new_event", glue_new_event);
 
 	/* cat.js */
@@ -162,9 +181,13 @@ void Init(Handle<Object> exports) {
 	NODE_SET_METHOD(exports, "glue_new_transaction", glue_new_transaction);
 	NODE_SET_METHOD(exports, "glue_log_event", glue_log_event);
 	NODE_SET_METHOD(exports, "glue_log_error", glue_log_error);
+	NODE_SET_METHOD(exports, "glue_settimeout", glue_settimeout);
 }
 
-char *parse_args(v8::Local<v8::Value> value) {
+/*
+ * extract char* from v8::Value
+ */
+char* parse_args(v8::Local<v8::Value> value) {
 	if (value->IsString()) {
 		String::Utf8Value str_temp(value);
 		char *str = (char *) malloc(str_temp.length() + 1);

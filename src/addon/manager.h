@@ -21,6 +21,7 @@
 #define THREAD_NAME "null"
 #define STR_NULL "null"
 #define STR_SIZE 1024
+
 typedef struct g_config{
 	char* domain;
 	char* server;
