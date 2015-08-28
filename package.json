@@ -2,7 +2,7 @@
   "name": "catclient",
   "version": "1.0.0",
   "description": "cat node client",
-  "main": "cat.js",
+  "main": "src/cat.js",
   "author": "stur",
   "license": "ISC",
   "apidoc": {
