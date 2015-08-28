@@ -11,9 +11,7 @@
   "scripts": {
     "test": "jasmine-node --matchAll --captureExceptions test/spec/cat.singleentry.js"
   },
-  "dependencies": {
-
-  },
+  "dependencies": {},
   "licenses": [
     {
       "type": "MIT",
@@ -21,11 +19,12 @@
     }
   ],
   "devDependencies": {
-    "morgan": "^1.6.1",
-    "sprintf-js": "^1.0.3",
     "express": "^4.13.3",
     "grunt-karma": "*",
+    "http": "0.0.0",
     "karma-jasmine": "*",
-    "karma-phantomjs-launcher": "*"
+    "karma-phantomjs-launcher": "*",
+    "morgan": "^1.6.1",
+    "sprintf-js": "^1.0.3"
   }
 }

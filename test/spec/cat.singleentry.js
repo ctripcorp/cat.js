@@ -26,9 +26,13 @@ describe("sigle suite",function(){
 				var sub1 = sub.span("trans","subT2");
 				pi();
 				sub1.end();
+
+				var t1 = cat.span("trans","root");
+				t1.end();
 			}
 			sub.end();
 		}
+
 		t.end();
 	});
 });

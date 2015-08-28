@@ -34,16 +34,20 @@ describe("cat client suite",function(){
 
 	it("many transaction",function(){
 		var t = cat.span("trans","root");
-		for(var i=0;i<10;i++){
+		for(var i=0;i<3;i++){
 			var sub = t.span("trans","subT1");
 			pi();
-			for(var i=0;i<10;i++){
+			for(var j=0;j<3;j++){
 				var sub1 = sub.span("trans","subT2");
 				pi();
 				sub1.end();
+
+				var t1 = cat.span("trans","root");
+				t1.end();
 			}
 			sub.end();
 		}
+
 		t.end();
 	});
 

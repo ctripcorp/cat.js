@@ -32,8 +32,8 @@ void perf(){
 	int r = rand()%30000;
 	char str[15];
 	sprintf(str, "%d", r);
-	cat_message *message = new_transaction(str,"name");
-
+	cat_message *message = new_transaction(str,"root");
+	cat_message *message1;
 	for(int i=0;i<3;i++){
 		cat_message *subTx=sub_transaction(str, "sub_trans", message);
 		trans_complete_with_status(subTx,"0");
@@ -41,9 +41,12 @@ void perf(){
 
 		r++;
 		sprintf(str, "%d", r);
-		cat_message *message1 = new_transaction(str,"name1");
-		trans_complete_with_status(message1,"0");
+
 	}
+
+	message1 = new_transaction(str,"standalone");
+	trans_complete_with_status(message1,"0");
+
 	trans_complete_with_status(message,"0");
 }
 

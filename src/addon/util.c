@@ -125,7 +125,7 @@ void init_ip() {
 	memset(&serv, 0, sizeof(serv));
 	serv.sin_family = AF_INET;
 
-	serv.sin_addr.s_addr = inet_addr("8.8.8.8"/*cat_config.server*/);
+	serv.sin_addr.s_addr = inet_addr(/*"8.8.8.8"*/cat_config.server);
 	serv.sin_port = htons(dns_port);
 
 	int err = connect(sock, (const struct sockaddr*) &serv, sizeof(serv));

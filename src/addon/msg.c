@@ -116,7 +116,7 @@ void set_complete(struct cat_message* message){
 	long current = get_tv_usec();
 	message->msg_transaction->endtime = current;
 	message->msg_transaction->duration = current - message->Timestamp;
-	printf("--Transaction[%p] has complete,current[%ld],start[%ld]\n",message,current,message->Timestamp);
+	printf("--Transaction[%p] has complete,start[%ld],end[%ld]\n",message,message->Timestamp,current);
 
 	if(message->msg_transaction->t_start == 1){
 	    pthread_t id = pthread_self();
@@ -140,17 +140,20 @@ void send_tree(struct cat_message* message) {
     err = pthread_create(&tid, NULL, &do_send, message);
     if (err != 0)
         printf("\ncan't create thread :[%s]", strerror(err));
-/*
+
+
+    void* status;
+    pthread_join(tid,&status);
+
+    //TODO free may not corrent
     while(1){
     	cat_message* temp=pop();
     	if(temp == NULL)
     		break;
     	else
     		free_tree(message);
-    }*/
+    }
 
-    void* status;
-    pthread_join(tid,&status);
 }
 
 void* do_send(void *arg){
@@ -269,7 +272,7 @@ void log_event(char* type, char* name, char* status, char* data) {
 }
 
 cat_message* new_event(char* type, char* name,char* status,char* data) {
-	cat_message* evt0 = (cat_message*) malloc(sizeof(cat_message));
+	cat_message* evt0 = (cat_message*) mem(1,sizeof(cat_message));
 	char* buf = mem(KB * KB,sizeof(char));
 	strcpy(buf, "");
 	strcat(buf,data);
