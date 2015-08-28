@@ -14,6 +14,12 @@
   "dependencies": {
 
   },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": ""
+    }
+  ],
   "devDependencies": {
     "morgan": "^1.6.1",
     "sprintf-js": "^1.0.3",
