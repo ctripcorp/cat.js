@@ -6,8 +6,8 @@
 using namespace v8;
 
 char *parse_args(v8::Local<v8::Value> value);
-void callback(void* p);
-void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*setFun)(char* value));
+
+void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*foo)(char*));
 
 /*
  * args[0] <Number> pointer of transaction to complete
@@ -135,7 +135,7 @@ void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*setFun)(char
  	args.GetReturnValue().Set(obj);
  }
 
- void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*setFun)(char* value)){
+ void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*foo)(char*)){
  	Isolate* isolate = Isolate::GetCurrent();
  	HandleScope scope(isolate);
 
@@ -151,17 +151,17 @@ void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*setFun)(char
 
  	char* value=parse_args(args[0]);
 
- 	setFun(value);
+ 	foo(value);
 
  	args.GetReturnValue().Set(Number::New(isolate,0));
  }
 
  void glue_set_domain(const FunctionCallbackInfo<Value>& args) {
- 	glue_set_inner(args,set_domain);
+ 	glue_set_inner(args,&set_domain);
  }
 
  void glue_set_server(const FunctionCallbackInfo<Value>& args) {
- 	glue_set_inner(args,set_server);
+ 	glue_set_inner(args,&set_server);
  }
 
 /*

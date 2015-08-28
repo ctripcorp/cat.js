@@ -14,8 +14,8 @@ var helper = require('./helper.js');
  * var express = require('express');
  * var app = express();
  * //自动在请求的结束埋点，
- * var rootTS = cat.span('type','name')
- *		app.use(rootTS('combined')); *	app.get('/', function (req, res) {
+ * var t = cat.span('type','name')
+ *		app.use(t('combined')); *	app.get('/', function (req, res) {
  *		res.send('hello, world!')
  *	});
 */
@@ -38,15 +38,11 @@ Cat.prototype={
 
 	_initConfig : function(){
 		if (appConfig['domain']){
-			console.log("domain:"+appConfig['domain']);
-			//TODO
-			//addon.glue_set_domain(appConfig['domain']);
+			addon.glue_set_domain(appConfig['domain']);
 		}
 
 		if (appConfig['server']){
-			console.log("server:"+appConfig['server'][0]);
-			//TODO
-			//addon.glue_set_server(appConfig['server'][0]);
+			addon.glue_set_server(appConfig['server'][0]);
 		}
 	},
 
@@ -58,7 +54,7 @@ Cat.prototype={
 	 * @apiParam {String} type
 	 * @apiParam {String} name
 	 * @apiExample {curl} Example usage:
-	 * var ts_root=cat.span("Type","Name");
+	 * var t=cat.span("Type","Name");
 	 */
 	 span : function(type,name){
 
@@ -75,7 +71,7 @@ Cat.prototype={
 	 },
 
 	/**
-	 * @api {function call} event(type,name[,key[,value]]) event
+	 * @api {function call} event(type,name,status[,key[,value[, ... ]]]) event
 	 * @apiName event
 	 * @apiGroup Cat
 	 * @apiDescription create an event and send immediatelly
@@ -84,8 +80,8 @@ Cat.prototype={
 	 * @apiParam {String} key
 	 * @apiParam {String} value
 	 * @apiExample {curl} Example usage:
-	 * cat.event("type","name");
-	 * cat.event("type","name","key","value");
+	 * cat.event("type","name","0","data");
+	 * cat.event("type","name","0","key","value");
 	 */
 	 event : function(type,name,status,key,value){
 	 	var keyValuePair;
@@ -107,7 +103,7 @@ Cat.prototype={
 	 * @apiDescription create an error and send immediatelly
 	 * @apiParam {String} error
 	 * @apiExample {curl} Example usage:
-	 * cat.error("exception");
+	 * cat.error(new Error("error message"));
 	 */
 	 error : function(err){
 	 	if(err instanceof Error){

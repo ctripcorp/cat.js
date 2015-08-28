@@ -44,8 +44,8 @@ var spanProto=Span.prototype;
  * @apiParam {String} type
  * @apiParam {String} name
  * @apiExample {curl} Example usage:
- * var t=cat.newTransaction("Type","Name");
- * var ts_sub=t.span("Type","Name");
+ * var t = cat.span("Type","Name");
+ * var t_sub=t.span("Type","Name");
  */
  spanProto.span= function(type,name){
 
@@ -57,7 +57,7 @@ var spanProto=Span.prototype;
  }
 
 /**
- * @api {function call} event(type,name[,data]) event
+ * @api {function call} event(type,name,status,[,data]) event
  * @apiName event
  * @apiGroup Span
  * @apiDescription create an event on current span
@@ -66,7 +66,7 @@ var spanProto=Span.prototype;
  * @apiParam {String} status
  * @apiParam {String} data
  * @apiExample {curl} Example usage:
- * var t=cat.span("Type","Name");
+ * var t = cat.span("Type","Name");
  * t.event("Type","Name");
  */
  spanProto.event= function(type,name,status,data){
@@ -87,7 +87,7 @@ var spanProto=Span.prototype;
  * @apiParam {String} error
  * @apiExample {curl} Example usage:
  * var t=cat.span("Type","Name");
- * t.error("Exception");
+ * t.error(new Error("error message"));
  */
  spanProto.error= function(err){
  	if(err instanceof Error){
@@ -101,12 +101,12 @@ var spanProto=Span.prototype;
 
 /**
 * @api {function call} timeout(timeout) timeout
-* @apiName timeout
+* @apiName timeout 
 * @apiGroup Span
 * @apiDescription set the timeout in millisecond
 * @apiParam {int} timeout
 * @apiExample {curl} Example usage:
-* var t=cat.span("Type","Name");
+* var t = cat.span("Type","Name");
 * t.timeout(3000);
 */
 spanProto.timeout =function(timeout_sec){

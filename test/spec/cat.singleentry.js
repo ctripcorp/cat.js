@@ -17,21 +17,9 @@ function pi()
 }
 
 describe("sigle suite",function(){
-	it("many transaction",function(){
+	it("add data",function(){
 		var t = cat.span("trans","root");
-		for(var i=0;i<3;i++){
-			var sub = t.span("trans","subT1");
-			pi();
-			for(var j=0;j<3;j++){
-				var sub1 = sub.span("trans","subT2");
-				pi();
-				sub1.end();
-
-				var t1 = cat.span("trans","root");
-				t1.end();
-			}
-			sub.end();
-		}
+		//t.event("type","name","0","stur=boy");
 
 		t.end();
 	});

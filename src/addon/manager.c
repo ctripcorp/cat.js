@@ -17,11 +17,11 @@ default_message_tree tree;
 g_context cat_context;
 
 void set_domain(char* domain){
-	str_copy(cat_config.domain,domain);
+	//str_copy(cat_config.domain,domain);
 }
 
 void set_server(char* server){
-	str_copy(cat_config.server,server);
+	//str_copy(cat_config.server,server);
 }
 
 void inner_next_message_id(char** buffer) {
