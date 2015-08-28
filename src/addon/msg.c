@@ -380,7 +380,6 @@ int buf_write_long(struct channel_buffer *buf,long i){
 	*/
 	char foo[30];
 	sprintf(foo,"%ld",i);
-	printf("***[%ld -> %s]***\n",i,foo);
 	int r = write_to_buffer(buf, foo);
 	return r;
 }
