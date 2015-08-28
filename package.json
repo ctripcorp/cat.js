@@ -1,5 +1,5 @@
 {
-  "name": "cat",
+  "name": "catclient",
   "version": "1.0.0",
   "description": "cat node client",
   "main": "cat.js",
