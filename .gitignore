@@ -10,3 +10,4 @@ build
 Debug
 doc
 .DS_Store
+npm-debug.log
