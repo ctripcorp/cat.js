@@ -2,6 +2,20 @@ var http = require('http');
 var fs=require("fs"); 
 var cat = require("../../src/cat");
 
+function pi()
+{
+	var c = 10000000000;
+	var Pi=0;
+	var n=1;
+	for (i=0;i<=c;i++)
+	{
+		Pi=Pi+(4/n)-(4/(n+2));
+		n=n+4;
+		//console.log(Pi);
+	}
+	console.log(Pi);
+}
+
 describe("cat client suite",function(){
 	it("read file",function(){
 		var fileName='../../src/ccat.cc';
@@ -12,6 +26,45 @@ describe("cat client suite",function(){
 
 			t.end();
 		});	
+	});
+
+	it("log error",function(){
+		cat.error(new Error("xxx"));
+	});
+
+	it("many transaction",function(){
+		var t = cat.span("trans","root");
+		for(var i=0;i<10;i++){
+			var sub = t.span("trans","subT1");
+			pi();
+			for(var i=0;i<10;i++){
+				var sub1 = sub.span("trans","subT2");
+				pi();
+				sub1.end();
+			}
+			sub.end();
+		}
+		t.end();
+	});
+
+	it("pi",function(){
+		var fileName='../../src/ccat.cc';
+		var t=cat.span('ReadFile',fileName);
+		var subSpan=t.span('ReadFile',fileName);
+		fs.readFile(fileName, function(err, data) {
+			t.event("ReadFile",fileName);
+			if(err){
+			}
+			fs.readFile(fileName, function(err, data) {
+				if(err){
+				}
+				
+				pi();
+				subSpan.end();
+			});	
+			
+		});	
+		t.end();
 	});
 
 	it("timeout",function(){

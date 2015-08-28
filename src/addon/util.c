@@ -133,7 +133,7 @@ void init_ip() {
 	socklen_t namelen = sizeof(name);
 	err = getsockname(sock, (struct sockaddr*) &name, &namelen);
 	//const char* p = inet_ntop(AF_INET, &name.sin_addr, cat_config.local_ip, 100);
-	printf("Local Address: %08x (%s)\n", name.sin_addr.s_addr, inet_ntoa(name.sin_addr));
+	//printf("Local Address: %08x (%s)\n", name.sin_addr.s_addr, inet_ntoa(name.sin_addr));
 	unsigned char *ip = (unsigned char *)&name.sin_addr.s_addr;
 	sprintf(&cat_context.local_ip_hex[0], "%02x%02x%02x%02x", ip[0], ip[1], ip[2], ip[3]);
 	cat_context.local_ip = inet_ntoa(name.sin_addr);
@@ -143,6 +143,18 @@ void init_ip() {
 	//}
 
 	close(sock);
+}
+
+void* mem(int count, int eltsize){
+	void* p = calloc(count,eltsize);
+	if(p == NULL){
+		printf("Not enough memory");
+	}
+	return p;
+}
+void f_mem(void* p){
+	free(p);
+	p=NULL;
 }
 
 void c11_support() {
@@ -159,12 +171,12 @@ int get_thread_id() {
 	return (int) self;
 }
 
-char * number_to_array(unsigned int number) {
-	int n = log10(number)+1;
-	char *numberArray = malloc(sizeof(char) * n);
-
+void int_to_array(unsigned int number,char** buf){
+	//int n = log10(number)+1;
+	char *numberArray = *buf;
 	snprintf(numberArray, sizeof(numberArray), "%d", number);
-	//printf("numberArray is now: %s\n", numberArray);
-
-	return numberArray;
+}
+void long_to_array(long number,char** buf){
+	char *numberArray = *buf;
+	snprintf(numberArray, sizeof(numberArray), "%ld", number);
 }

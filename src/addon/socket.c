@@ -16,8 +16,8 @@
 #include <string.h>
 
 void linux_send(char* buf, int sendsize) {
-	/* debug without network
-	 return;*/
+	/* debug without network*/
+	 return;
 
 	int sock_cli = socket(AF_INET, SOCK_STREAM, 0);
 

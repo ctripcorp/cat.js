@@ -38,11 +38,9 @@ Message.prototype={
 	 * message.addData("stur","boy","coco","girl");
 	 */
 	addData : function(key,value){
-	 	this._debugLog("message["+this._id.valueOf()+"]"+" addData invoke");
-
 	 	var keyValuePair;
 	 	if(arguments.length==1){
-	 		keyValuePair=key;
+	 		keyValuePair=key.toString();
 	 	}
 
 	 	if(arguments.length%2 == 0 && arguments.length>=2){
@@ -54,8 +52,7 @@ Message.prototype={
 	
 	 	}
 
-		//TODO
-		//addon.glue_add_data(this._id,keyValuePair);
+		addon.glue_add_data(this._id,keyValuePair);
 	},
 
 	/**
@@ -67,16 +64,7 @@ Message.prototype={
 	 * message.setStatus("ERROR");
 	 */
 	setStatus : function(status){
-	 	this._debugLog("message["+this._id.valueOf()+"]"+" set status invoke");
-
-		//TODO
-		//addon.glue_set_status(this._id,status);
-	},
-
-	_debugLog : function(msg){
-		if(debug){
-			console.log(msg);
-		}
+		addon.glue_set_status(this._id,status);
 	}
 }
 

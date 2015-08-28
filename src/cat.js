@@ -2,6 +2,7 @@ var addon = require('bindings')('ccat');
 var path= require('path');
 var appConfig=require(path.resolve(__dirname,'./appConfig.js'));
 var Span=require('./span');
+var helper = require('./helper.js');
 
 /**
  * @api {constructor} Cat([optoin]) constructor
@@ -59,7 +60,7 @@ Cat.prototype={
 	 * @apiExample {curl} Example usage:
 	 * var ts_root=cat.span("Type","Name");
 	 */
-	 span : function(type,name,callback){
+	 span : function(type,name){
 
 	 	var obj = addon.glue_new_transaction(type,name);
 
@@ -86,19 +87,18 @@ Cat.prototype={
 	 * cat.event("type","name");
 	 * cat.event("type","name","key","value");
 	 */
-	 event : function(type,name,key,value){
+	 event : function(type,name,status,key,value){
 	 	var keyValuePair;
-	 	if(arguments.length==3){
-	 		keyValuePair=key;
+	 	if(arguments.length==4){
+	 		keyValuePair = key.toString();
 	 	}
 
-	 	if(arguments.length==4){
+	 	if(arguments.length==5){
 	 		keyValuePair=key+"="+value;
 	 	}
 
-		//TODO
-		//addon.glue_log_event(type,name,keyValuePair);
-	},
+	 	addon.glue_log_event(type,name,status,keyValuePair);
+	 },
 
 	/**
 	 * @api {function call} error(error) error
@@ -109,16 +109,18 @@ Cat.prototype={
 	 * @apiExample {curl} Example usage:
 	 * cat.error("exception");
 	 */
-	 error : function(error){
-	 	var exceptionType="Exception";
-		//TOTO
-		//read exception type from error
-		//TODO
-		//addon.glue_log_error(exceptionType,keyValuePair);
-	}
+	 error : function(err){
+	 	if(err instanceof Error){
+	 		var type = helper.extract_type(err);
+
+	 		this.event("Error",type,"ERROR",err);
+	 	}else{
+	 		throw new Error("you can't log an error which type isn't <Error>");
+	 	}
+	 }
 
 
 }
 
-	module.exports=new Cat();
+module.exports=new Cat();
 

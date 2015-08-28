@@ -7,157 +7,239 @@ using namespace v8;
 
 char *parse_args(v8::Local<v8::Value> value);
 void callback(void* p);
+void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*setFun)(char* value));
+
 /*
  * args[0] <Number> pointer of transaction to complete
  * args[1] <String> transaction status
  */
-void glue_complete(const FunctionCallbackInfo<Value>& args) {
-	Isolate* isolate = Isolate::GetCurrent();
-	HandleScope scope(isolate);
+ void glue_complete(const FunctionCallbackInfo<Value>& args) {
+ 	Isolate* isolate = Isolate::GetCurrent();
+ 	HandleScope scope(isolate);
 
-	if (args.Length() != 2) {
-		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
-		return;
-	}
+ 	if (args.Length() != 2) {
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
+ 		return;
+ 	}
 
-	if(!args[0]->IsNumber() || !args[1]->IsString()){
-		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
-		return;
-	}
+ 	if(!args[0]->IsNumber() || !args[1]->IsString()){
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+ 		return;
+ 	}
 
-	long ptr=args[0]->NumberValue();
-	char* status=parse_args(args[1]);
-	
-	cat_message* p= reinterpret_cast<cat_message*>(ptr);
-	trans_complete_with_status(p, status);
+ 	long ptr=args[0]->NumberValue();
+ 	char* status=parse_args(args[1]);
 
-	args.GetReturnValue().Set(Number::New(isolate,0));
-}
+ 	cat_message* p= reinterpret_cast<cat_message*>(ptr);
+ 	trans_complete_with_status(p, status);
 
-void glue_add_data(const FunctionCallbackInfo<Value>& args) {
+ 	args.GetReturnValue().Set(Number::New(isolate,0));
+ }
 
-}
+ void glue_add_data(const FunctionCallbackInfo<Value>& args) {
+ 	Isolate* isolate = Isolate::GetCurrent();
+ 	HandleScope scope(isolate);
 
-void glue_set_status(const FunctionCallbackInfo<Value>& args) {
+ 	if (args.Length() != 2) {
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
+ 		return;
+ 	}
 
-}
+ 	if(!args[0]->IsNumber() || !args[1]->IsString()){
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+ 		return;
+ 	}
 
-void glue_subTransaction(const FunctionCallbackInfo<Value>& args) {
-	Isolate* isolate = Isolate::GetCurrent();
-	HandleScope scope(isolate);
+ 	long ptr=args[0]->NumberValue();
+ 	char* data=parse_args(args[1]);
 
-	if (args.Length() != 3) {
-		isolate->ThrowException(Exception::TypeError(
-			String::NewFromUtf8(isolate, "Wrong number of arguments")));
-		return;
-	}
-	long ptr=args[0]->NumberValue();
-	
-	cat_message* p= reinterpret_cast<cat_message*>(ptr);
-	char* type=parse_args(args[1]);
-	char* name=parse_args(args[2]);
-	cat_message *message = sub_transaction(type,name,p);
+ 	cat_message* p= reinterpret_cast<cat_message*>(ptr);
+ 	add_data(p, data);
 
-	long rPtr= reinterpret_cast<long>(message);
+ 	args.GetReturnValue().Set(Number::New(isolate,0));
+ }
 
-	Local<Object> obj = Object::New(isolate);
+ void glue_set_status(const FunctionCallbackInfo<Value>& args) {
+ 	Isolate* isolate = Isolate::GetCurrent();
+ 	HandleScope scope(isolate);
+
+ 	if (args.Length() != 2) {
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
+ 		return;
+ 	}
+
+ 	if(!args[0]->IsNumber() || !args[1]->IsString()){
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+ 		return;
+ 	}
+
+ 	long ptr=args[0]->NumberValue();
+ 	char* status=parse_args(args[1]);
+
+ 	cat_message* p= reinterpret_cast<cat_message*>(ptr);
+ 	set_status(p, status);
+
+ 	args.GetReturnValue().Set(Number::New(isolate,0));
+ }
+
+ void glue_subTransaction(const FunctionCallbackInfo<Value>& args) {
+ 	Isolate* isolate = Isolate::GetCurrent();
+ 	HandleScope scope(isolate);
+
+ 	if (args.Length() != 3) {
+ 		isolate->ThrowException(Exception::TypeError(
+ 			String::NewFromUtf8(isolate, "Wrong number of arguments")));
+ 		return;
+ 	}
+ 	long ptr=args[0]->NumberValue();
+
+ 	cat_message* p= reinterpret_cast<cat_message*>(ptr);
+ 	char* type=parse_args(args[1]);
+ 	char* name=parse_args(args[2]);
+ 	cat_message *message = sub_transaction(type,name,p);
+
+ 	long rPtr= reinterpret_cast<long>(message);
+
+ 	Local<Object> obj = Object::New(isolate);
 	//return pointer address
-	obj->Set(String::NewFromUtf8(isolate, "pointer"), Number::New(isolate,rPtr));
-	args.GetReturnValue().Set(obj);
-}
+ 	obj->Set(String::NewFromUtf8(isolate, "pointer"), Number::New(isolate,rPtr));
+ 	args.GetReturnValue().Set(obj);
+ }
 
-void glue_new_event(const FunctionCallbackInfo<Value>& args) {
-	Isolate* isolate = Isolate::GetCurrent();
-	HandleScope scope(isolate);
+ void glue_new_event(const FunctionCallbackInfo<Value>& args) {
+ 	Isolate* isolate = Isolate::GetCurrent();
+ 	HandleScope scope(isolate);
 
-	if (args.Length() != 3) {
-		isolate->ThrowException(Exception::TypeError(
-			String::NewFromUtf8(isolate, "Wrong number of arguments")));
-		return;
-	}
+ 	if (args.Length() != 4) {
+ 		isolate->ThrowException(Exception::TypeError(
+ 			String::NewFromUtf8(isolate, "Wrong number of arguments")));
+ 		return;
+ 	}
 
-	if(!args[0]->IsNumber() || !args[1]->IsString() || !args[2]->IsString()){
-		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
-		return;
-	}
+ 	if(!args[0]->IsNumber() || !args[1]->IsString() || !args[2]->IsString()|| !args[3]->IsString()){
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+ 		return;
+ 	}
 
-	long ptr=args[0]->NumberValue();
-	
-	cat_message* p= reinterpret_cast<cat_message*>(ptr);
-	char* type=parse_args(args[1]);
-	char* name=parse_args(args[2]);
-	cat_message *message = sub_event(type,name,p);
-	
-	long rPtr= reinterpret_cast<long>(message);
-	Local<Object> obj = Object::New(isolate);
-	obj->Set(String::NewFromUtf8(isolate, "pointer"), Number::New(isolate,rPtr));
-	args.GetReturnValue().Set(obj);
-}
+ 	long ptr=args[0]->NumberValue();
 
-void glue_set_domain(const FunctionCallbackInfo<Value>& args) {
+ 	cat_message* p= reinterpret_cast<cat_message*>(ptr);
+ 	char* type=parse_args(args[1]);
+ 	char* name=parse_args(args[2]);
+ 	char* status=parse_args(args[3]);
+ 	cat_message *message = sub_event(type,name,status,p);
 
-}
+ 	long rPtr= reinterpret_cast<long>(message);
+ 	Local<Object> obj = Object::New(isolate);
+ 	obj->Set(String::NewFromUtf8(isolate, "pointer"), Number::New(isolate,rPtr));
+ 	args.GetReturnValue().Set(obj);
+ }
 
-void glue_set_server(const FunctionCallbackInfo<Value>& args) {
+ void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*setFun)(char* value)){
+ 	Isolate* isolate = Isolate::GetCurrent();
+ 	HandleScope scope(isolate);
 
-}
+ 	if (args.Length() != 1) {
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
+ 		return;
+ 	}
+
+ 	if(!args[0]->IsString()){
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+ 		return;
+ 	}
+
+ 	char* value=parse_args(args[0]);
+
+ 	setFun(value);
+
+ 	args.GetReturnValue().Set(Number::New(isolate,0));
+ }
+
+ void glue_set_domain(const FunctionCallbackInfo<Value>& args) {
+ 	glue_set_inner(args,set_domain);
+ }
+
+ void glue_set_server(const FunctionCallbackInfo<Value>& args) {
+ 	glue_set_inner(args,set_server);
+ }
 
 /*
  * args[0] <String> transaction type
  * args[1] <String> transaction name
  */
-void glue_new_transaction(const FunctionCallbackInfo<Value>& args) {
+ void glue_new_transaction(const FunctionCallbackInfo<Value>& args) {
+ 	Isolate* isolate = Isolate::GetCurrent();
+ 	HandleScope scope(isolate);
+
+ 	if (args.Length() != 2) {
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
+ 		return;
+ 	}
+
+ 	if(!args[0]->IsString() || !args[1]->IsString()){
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+ 		return;
+ 	}
+
+ 	char* type=parse_args(args[0]);
+ 	char* name=parse_args(args[1]);
+
+ 	cat_message *message = new_transaction(type,name);
+
+ 	long ptr= reinterpret_cast<long>(message);
+
+ 	Local<Object> obj = Object::New(isolate);
+ 	obj->Set(String::NewFromUtf8(isolate, "pointer"), Number::New(isolate,ptr));
+ 	args.GetReturnValue().Set(obj);
+ }
+
+ void glue_log_event(const FunctionCallbackInfo<Value>& args) {
 	Isolate* isolate = Isolate::GetCurrent();
-	HandleScope scope(isolate);
+ 	HandleScope scope(isolate);
+ 	int args_length = 4;
 
-	if (args.Length() != 2) {
-		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
-		return;
-	}
+ 	if (args.Length() != args_length) {
+ 		isolate->ThrowException(Exception::TypeError(
+ 			String::NewFromUtf8(isolate, "Wrong number of arguments")));
+ 		return;
+ 	}
 
-	if(!args[0]->IsString() || !args[1]->IsString()){
-		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
-		return;
-	}
+ 	for(int i =0;i<4;i++){
+ 		if(!args[i]->IsString()){
+ 			printf("args[%d] type error\n", i);
+ 			isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+ 			return;
+ 		}
+ 	}
 
-	char* type=parse_args(args[0]);
-	char* name=parse_args(args[1]);
+ 	char* type=parse_args(args[0]);
+ 	char* name=parse_args(args[1]);
+ 	char* status=parse_args(args[2]);
+ 	char* data=parse_args(args[3]);
+ 	log_event(type,name,status,data);
 
-	cat_message *message = new_transaction(type,name);
-	
-	long ptr= reinterpret_cast<long>(message);
+ 	args.GetReturnValue().Set(Number::New(isolate,0)); 
+ }
 
-	Local<Object> obj = Object::New(isolate);
-	obj->Set(String::NewFromUtf8(isolate, "pointer"), Number::New(isolate,ptr));
-	args.GetReturnValue().Set(obj);
-}
+ void glue_settimeout(const FunctionCallbackInfo<Value>& args) {
+ 	Isolate* isolate = Isolate::GetCurrent();
+ 	HandleScope scope(isolate);
 
-void glue_log_event(const FunctionCallbackInfo<Value>& args) {
+ 	if (args.Length() != 2) {
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
+ 		return;
+ 	}
 
-}
+ 	if(!args[0]->IsNumber() || !args[0]->IsNumber()){
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+ 		return;
+ 	}
 
-void glue_log_error(const FunctionCallbackInfo<Value>& args) {
-
-}
-
-void glue_settimeout(const FunctionCallbackInfo<Value>& args) {
-	Isolate* isolate = Isolate::GetCurrent();
-	HandleScope scope(isolate);
-
-	if (args.Length() != 2) {
-		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
-		return;
-	}
-
-	if(!args[0]->IsNumber() || !args[0]->IsNumber()){
-		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
-		return;
-	}
-
-	long ptr = args[0]->NumberValue();
-	int sec = args[1]->NumberValue();
-	cat_message* p= reinterpret_cast<cat_message*>(ptr);
-	settimeout(p,sec);
+ 	long ptr = args[0]->NumberValue();
+ 	int sec = args[1]->NumberValue();
+ 	cat_message* p= reinterpret_cast<cat_message*>(ptr);
+ 	settimeout(p,sec);
 
 	args.GetReturnValue().Set(Number::New(isolate,0)); // return 0 as success
 }
@@ -180,25 +262,24 @@ void Init(Handle<Object> exports) {
 	NODE_SET_METHOD(exports, "glue_set_server", glue_set_server);
 	NODE_SET_METHOD(exports, "glue_new_transaction", glue_new_transaction);
 	NODE_SET_METHOD(exports, "glue_log_event", glue_log_event);
-	NODE_SET_METHOD(exports, "glue_log_error", glue_log_error);
 	NODE_SET_METHOD(exports, "glue_settimeout", glue_settimeout);
 }
 
 /*
  * extract char* from v8::Value
  */
-char* parse_args(v8::Local<v8::Value> value) {
-	if (value->IsString()) {
-		String::Utf8Value str_temp(value);
-		char *str = (char *) malloc(str_temp.length() + 1);
-		strcpy(str, *str_temp);
-		return str;
-	}
-	const char *fallback = "";
-	char *str = (char *) malloc(strlen(fallback) + 1);
-	strcpy(str, fallback);
-	return str;
-}
+ char* parse_args(v8::Local<v8::Value> value) {
+ 	if (value->IsString()) {
+ 		String::Utf8Value str_temp(value);
+ 		char *str = (char *) malloc(str_temp.length() + 1);
+ 		strcpy(str, *str_temp);
+ 		return str;
+ 	}
+ 	const char *fallback = "";
+ 	char *str = (char *) malloc(strlen(fallback) + 1);
+ 	strcpy(str, fallback);
+ 	return str;
+ }
 
-NODE_MODULE(ccat, Init)
+ NODE_MODULE(ccat, Init)
 

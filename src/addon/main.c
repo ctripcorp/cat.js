@@ -15,18 +15,36 @@
 #include "manager.h"
 void success_sample();
 void test_log_event();
+void perf();
+
 int main(void) {
-	success_sample();
+	perf();
+	printf("finish");
 	return EXIT_SUCCESS;
 }
 
 void test_log_event(){
+ log_event("Error", "Exception1", "ERROR2", "Exception2");
+}
+
+void perf(){
 	srand(time(NULL));
 	int r = rand()%30000;
 	char str[15];
 	sprintf(str, "%d", r);
+	cat_message *message = new_transaction(str,"name");
 
-	log_event(str,"name","0","name=stur");
+	for(int i=0;i<3;i++){
+		cat_message *subTx=sub_transaction(str, "sub_trans", message);
+		trans_complete_with_status(subTx,"0");
+		sub_event("evt0","sth","0",subTx);
+
+		r++;
+		sprintf(str, "%d", r);
+		cat_message *message1 = new_transaction(str,"name1");
+		trans_complete_with_status(message1,"0");
+	}
+	trans_complete_with_status(message,"0");
 }
 
 void success_sample(){

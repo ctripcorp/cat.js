@@ -1,7 +1,7 @@
 var util = require("util");
-
 var addon = require('bindings')('ccat');
-var Message=require('./message');
+var Message = require('./message');
+var helper = require('./helper.js');
 
 /**
  * @api {constructor} Span(message_id) constructor
@@ -71,7 +71,7 @@ var spanProto=Span.prototype;
  */
  spanProto.event= function(type,name,status,data){
 
- 	var event_id = addon.glue_new_event(this._id,type,name);
+ 	var event_id = addon.glue_new_event(this._id,status,type,name);
  	var cat_event = new Message(event_id);
  	if(arguments.length==3){
  		cat_event.addData(data);
@@ -89,12 +89,13 @@ var spanProto=Span.prototype;
  * var t=cat.span("Type","Name");
  * t.error("Exception");
  */
- spanProto.error= function(error){
- 	if(error instanceof Error){
- 		this.event("Error",error.name,"0",error);
+ spanProto.error= function(err){
+ 	if(err instanceof Error){
+ 		var type = helper.extract_type(err);
+
+ 		this.event(type,err.message,"0",err);
  	}else{
- 		//TODO
- 		//other error?
+ 		throw new Error("you can't log an error which type isn't Error");
  	}
  }
 

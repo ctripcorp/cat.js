@@ -2,11 +2,9 @@ var http = require('http');
 var fs=require("fs"); 
 var cat = require("../../src/cat");
 
-//耗时运算，计算pi
-
 function pi()
 {
-	var c = 10000000000;
+	var c = 100000000;
 	var Pi=0;
 	var n=1;
 	for (i=0;i<=c;i++)
@@ -19,23 +17,18 @@ function pi()
 }
 
 describe("sigle suite",function(){
-	it("read file",function(){
-		var fileName='../../src/ccat.cc';
-		var t=cat.span('ReadFile',fileName);
-		var subSpan=t.span('ReadFile',fileName);
-		fs.readFile(fileName, function(err, data) {
-			t.event("ReadFile",fileName);
-			if(err){
-			}
-			fs.readFile(fileName, function(err, data) {
-				if(err){
-				}
-				
+	it("many transaction",function(){
+		var t = cat.span("trans","root");
+		for(var i=0;i<3;i++){
+			var sub = t.span("trans","subT1");
+			pi();
+			for(var j=0;j<3;j++){
+				var sub1 = sub.span("trans","subT2");
 				pi();
-				subSpan.end();
-			});	
-			
-		});	
+				sub1.end();
+			}
+			sub.end();
+		}
 		t.end();
 	});
 });

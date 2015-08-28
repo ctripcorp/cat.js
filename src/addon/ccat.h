@@ -11,8 +11,11 @@ extern "C"
 	extern cat_message* new_transaction(char* type, char* name);
 	extern cat_message* sub_transaction(char* type, char* name, struct cat_message *parent);
 	extern void log_event(char* type, char* name, char* status, char* data);
-	extern cat_message* sub_event(char* type, char* name, struct cat_message *parent);
+	extern cat_message* sub_event(char* type, char* name, char* status, struct cat_message *parent);
 	extern cat_message* add_data(struct cat_message *event, char* data);
+	extern void set_domain(char* domain);
+	extern void set_server(char* server);
+	extern void set_status(struct cat_message* message, char* status);
 }
 
 #endif

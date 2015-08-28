@@ -51,13 +51,14 @@ typedef struct default_message_tree{
 
 void add_message(struct cat_message* message);
 void setup();
-void set_domain(char* domain);
-char* next_message_id();
-
+void inner_next_message_id(char** buffer);
+void next_message_id();
 extern char * number_to_array(unsigned int number);
 extern long get_tv_usec();
 extern void init_ip();
 extern void str_copy(char* dest,char* source);
 
+void set_domain(char* domain);
+void set_server(char* server);
 #endif /* SRC_ADDON_DEPS_C_CONFIG_H_ */
 
