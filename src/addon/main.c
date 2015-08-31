@@ -18,8 +18,8 @@ void test_log_event();
 void perf();
 
 int main(void) {
-	set_domain("vvv");
-
+	//set_domain("vvv");
+	perf();
 	printf("finish");
 	return EXIT_SUCCESS;
 }

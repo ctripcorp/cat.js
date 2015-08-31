@@ -16,8 +16,6 @@ void getFormatTime(char** buf);
 int get_thread_id();
 void init_ip();
 long get_tv_usec();
-void int_to_array(unsigned int number,char** buf);
-void long_to_array(long number,char** buf);
 void str_copy(char* dest, char* source);
 void* mem(int count, int eltsize);
 void f_mem(void* p);

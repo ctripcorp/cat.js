@@ -162,7 +162,8 @@ void* do_send(void *arg){
 	struct channel_buffer buf;
 	encode(&tree, &buf);
 	printf("[info]Raw Text:\n");
-	for (int i = 0; i < buf.buffer_pointer; i++) {
+	int i;
+	for (i = 0; i < buf.buffer_pointer; i++) {
 		printf("%c", buf.buffer[i]);
 	}
 
@@ -296,7 +297,8 @@ void free_tree(struct cat_message *root){
 
 	if (root->reportType == ReportType_Transaction){
 		int len = root->msg_transaction->message_children_size;
-		for (int i = 0; i < len; i++) {
+		int i;
+		for (i = 0; i < len; i++) {
 			struct cat_message* child = root->msg_transaction->messageChildren[i];
 			free_tree(child);
 		}
@@ -366,21 +368,13 @@ int encode_header(struct default_message_tree* tree, struct channel_buffer *buf)
 int buf_write_int(struct channel_buffer *buf,int i){
 	int n = log10(i)+1;
 	char* number_buf = mem(n,sizeof(char));
-	int_to_array(i,&number_buf);
+	snprintf(number_buf, n, "%d", i);
 	int r = write_to_buffer(buf, number_buf);
 	f_mem(number_buf);
 	return r;
 }
 
 int buf_write_long(struct channel_buffer *buf,long i){
-	/*
-	int n = log10(i)+1;
-	char* number_buf = mem(n,sizeof(char));
-	int_to_array(i,&number_buf);
-	int r = write_to_buffer(buf, number_buf);
-	printf("***[%ld -> %s]***\n",i,number_buf);
-	f_mem(number_buf);
-	*/
 	char foo[30];
 	sprintf(foo,"%ld",i);
 	int r = write_to_buffer(buf, foo);
@@ -442,7 +436,8 @@ int encode_message(struct cat_message* message, struct channel_buffer *buf) {
 		int count = 0;
 		count += encode_line(message, buf, 't', Policy_WITHOUT_STATUS);
 
-		for (int i = 0; i < len; i++) {
+		int i;
+		for (i = 0; i < len; i++) {
 			struct cat_message* child = transaction_temp->messageChildren[i];
 			count += encode_message(child, buf);
 		}

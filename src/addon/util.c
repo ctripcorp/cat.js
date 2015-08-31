@@ -132,6 +132,9 @@ void init_ip() {
 	struct sockaddr_in name;
 	socklen_t namelen = sizeof(name);
 	err = getsockname(sock, (struct sockaddr*) &name, &namelen);
+	if(err){
+		printf("Error code:%d",err);
+	}
 	//const char* p = inet_ntop(AF_INET, &name.sin_addr, cat_config.local_ip, 100);
 	//printf("Local Address: %08x (%s)\n", name.sin_addr.s_addr, inet_ntoa(name.sin_addr));
 	unsigned char *ip = (unsigned char *)&name.sin_addr.s_addr;
@@ -169,14 +172,4 @@ int get_thread_id() {
 	pthread_t self;
 	self = pthread_self();
 	return (int) self;
-}
-
-void int_to_array(unsigned int number,char** buf){
-	//int n = log10(number)+1;
-	char *numberArray = *buf;
-	snprintf(numberArray, sizeof(numberArray), "%d", number);
-}
-void long_to_array(long number,char** buf){
-	char *numberArray = *buf;
-	snprintf(numberArray, sizeof(numberArray), "%ld", number);
 }
