@@ -10,13 +10,16 @@
 
 #define KB 1024
 
+#define snprintf rpl_snprintf
+
 int write_to_buffer_raw(char *buf, char * data, int length, int index);
 int setint_to_buffer_begin(char* buffer, int i);
 void getFormatTime(char** buf);
-int get_thread_id();
-void init_ip();
 long get_tv_usec();
 void str_copy(char* dest, char* source);
 void* mem(int count, int eltsize);
 void f_mem(void* p);
+int c_get_threadid();
+void c_exit_thread();
+
 #endif /* SRC_ADDON_UTIL_H_ */

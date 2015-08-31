@@ -4,11 +4,17 @@
  *  Created on: 2015年8月11日
  *      Author: Stur
  */
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#include <pthread.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <pthread.h>
 #include <math.h>
 #include "msg.h"
 #include "manager.h"
@@ -119,41 +125,54 @@ void set_complete(struct cat_message* message){
 	printf("--Transaction[%p] has complete,start[%ld],end[%ld]\n",message,message->Timestamp,current);
 
 	if(message->msg_transaction->t_start == 1){
-	    pthread_t id = pthread_self();
+		int id = c_get_threadid();
 
-	    if(pthread_equal(id,message->msg_transaction->tid))
-	    {
-	        /* complete running in timeout thread */
-	        int ret1  = 100;
-	        pthread_exit(&ret1);
-	    }else{
-	    	cancel_timeout(message);
-	    }
-
-	    message->msg_transaction->t_start = 0;
+		if (id == message->msg_transaction->tid)
+		{
+			/* complete running in timeout thread */
+			c_exit_thread();
+		}
+		else{
+			cancel_timeout(message);
+		}
 	}
+
 }
 
+#ifdef _WIN32
+DWORD WINAPI ThreadFunc(void* data) {
+	do_send(data);
+	return 0;
+}
+#endif
+
 void send_tree(struct cat_message* message) {
+#ifdef _WIN32
+	HANDLE thread = CreateThread(NULL, 0, ThreadFunc, NULL, 0, NULL);
+	if (thread) {
+		// Optionally do stuff, such as wait on the thread.
+	}
+#else
 	pthread_t tid;
 	int err;
-    err = pthread_create(&tid, NULL, &do_send, message);
-    if (err != 0)
-        printf("\ncan't create thread :[%s]", strerror(err));
+	err = pthread_create(&tid, NULL, &do_send, message);
+	if (err != 0)
+		printf("\ncan't create thread :[%s]", strerror(err));
 
 
-    void* status;
-    pthread_join(tid,&status);
+	void* status;
+	pthread_join(tid, &status);
+#endif
 
-    //TODO free may not corrent
-    while(1){
-    	cat_message* temp=pop();
-    	if(temp == NULL)
-    		break;
-    	else
-    		free_tree(message);
-    }
 
+	//TODO free may not corrent
+	while (1){
+		cat_message* temp = pop();
+		if (temp == NULL)
+			break;
+		else
+			free_tree(message);
+	}
 }
 
 void* do_send(void *arg){
@@ -188,11 +207,10 @@ void* do_send(void *arg){
 	printf("\n");
 #endif
 
-	linux_send(buf.buffer, buf.writen_size);
+	socket_send(buf.buffer, buf.writen_size);
 
 	push(message);
-    int ret1  = 100;
-    pthread_exit(&ret1);
+	c_exit_thread();
 	return NULL;
 }
 
@@ -202,7 +220,12 @@ cat_message* new_transaction(char* type, char* name) {
 }
 
 void cancel_timeout(struct cat_message* message){
+#ifdef _WIN32
+	//TODO
+#else
 	pthread_cancel(message->msg_transaction->tid);
+#endif
+
 	message->msg_transaction->t_start = 0;
 }
 
@@ -210,21 +233,33 @@ void settimeout(struct cat_message* message, int sec){
 	message->msg_transaction->timeout = sec;
 	if(message->msg_transaction->t_start == 1)
 		cancel_timeout(message);
+#ifdef _WIN32
+	/*HANDLE thread =*/ CreateThread(NULL, 0, ThreadFunc, NULL, 0, NULL);
+	//TODO FIX ME
+	//if (thread) {
+	message->msg_transaction->t_start = 1;
+	//}
+#else
 	int err;
-    err = pthread_create(&message->msg_transaction->tid, NULL, &do_timeout, message);
-    if (err != 0)
-        printf("\ncan't create thread :[%s]", strerror(err));
-    else
-    	message->msg_transaction->t_start = 1;
+	err = pthread_create(&message->msg_transaction->tid, NULL, &do_timeout, message);
+	if (err != 0)
+		printf("\ncan't create thread :[%s]", strerror(err));
+	else
+		message->msg_transaction->t_start = 1;
+#endif
 }
 
 void* do_timeout(void *arg)
 {
 	struct cat_message* message = arg;
+#ifdef _WIN32
+	//TODO FIX ME
+#else
 	sleep(message->msg_transaction->timeout);
+#endif
+
 	timeout(message);
-    int ret1  = 100;
-    pthread_exit(&ret1);
+	c_exit_thread();
     return NULL;
 }
 
@@ -315,7 +350,6 @@ void free_trans(struct cat_message *trans){
 	f_mem(trans->msg_transaction);
 	f_mem(trans);
 }
-
 
 cat_message* add_data(struct cat_message *event, char* data){
 

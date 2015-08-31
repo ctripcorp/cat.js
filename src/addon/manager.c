@@ -5,7 +5,6 @@
  *      Author: Stur
  */
 
-#include <pthread.h>
 #include <time.h>
 #include <stdlib.h>
 #include <math.h>
@@ -65,9 +64,14 @@ void setup(){
 	init_ip();
 
 	str_copy(tree.ThreadGroupName,THREAD_GROUP_NAME);
+#ifdef _WIN32
+	//TODO
+	str_copy(tree.HostName, "DSTTest");
+#else
 	gethostname(tree.HostName, 1024);
+#endif
 	str_copy(tree.Domain,cat_config.domain);
-	tree.ThreadId = (unsigned int)pthread_self();
+	tree.ThreadId = (unsigned int)c_get_threadid();
 	str_copy(tree.ThreadName,THREAD_NAME);
 
 	next_message_id();

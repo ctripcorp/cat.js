@@ -8,11 +8,19 @@
 #ifndef SRC_ADDON_MESSAGE_H_
 #define SRC_ADDON_MESSAGE_H_
 
+#define snprintf rpl_snprintf
+
+#ifdef _WIN32
+
+#else
+#include <sys/time.h>
+#endif
+
 #include "manager.h"
 #include "util.h"
 #include "socket.h"
 #include <time.h>
-#include <sys/time.h>
+
 
 #define MAX_BUFFER_SIZE 8192
 #define TRANSACTION_CHILD_SIZE 1000
@@ -75,7 +83,7 @@ struct cat_transaction{
 	cat_message *ts_parent;
 	int docomplete;//root trans must explicit set to 1, even if all sub trans has complete
 	int timeout;//sec
-	pthread_t tid;
+	int tid;
 	int t_start; // 1 = timeout thread already start
 };
 

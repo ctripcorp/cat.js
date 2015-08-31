@@ -8,6 +8,8 @@
 #ifndef SRC_ADDON_DEPS_C_CONFIG_H_
 #define SRC_ADDON_DEPS_C_CONFIG_H_
 
+#define snprintf rpl_snprintf
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,11 +18,12 @@
 #ifdef _WIN32
 
 #else
-	#include <unistd.h>
+#include <unistd.h>
+#include <sys/time.h>
 #endif
 
 #include <time.h>
-#include <sys/time.h>
+
 #define DEFAULT_DOMAIN "nodejs"
 #define SPLIT "-"
 #define THREAD_GROUP_NAME "NodeThreadGroup"
