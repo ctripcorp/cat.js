@@ -12,7 +12,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <unistd.h>
+
+#ifdef _WIN32
+
+#else
+	#include <unistd.h>
+#endif
+
 #include <time.h>
 #include <sys/time.h>
 #define DEFAULT_DOMAIN "nodejs"
