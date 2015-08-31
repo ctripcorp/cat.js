@@ -8,7 +8,9 @@
 #ifndef SRC_ADDON_MESSAGE_H_
 #define SRC_ADDON_MESSAGE_H_
 
+#ifdef _WIN32
 #define snprintf rpl_snprintf
+#endif
 
 #ifdef _WIN32
 

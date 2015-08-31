@@ -10,7 +10,9 @@
 
 #define KB 1024
 
+#ifdef _WIN32
 #define snprintf rpl_snprintf
+#endif
 
 int write_to_buffer_raw(char *buf, char * data, int length, int index);
 int setint_to_buffer_begin(char* buffer, int i);

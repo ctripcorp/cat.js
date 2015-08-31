@@ -8,7 +8,9 @@
 #ifndef SRC_ADDON_DEPS_C_CONFIG_H_
 #define SRC_ADDON_DEPS_C_CONFIG_H_
 
+#ifdef _WIN32
 #define snprintf rpl_snprintf
+#endif
 
 #include <string.h>
 #include <stdlib.h>
