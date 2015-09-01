@@ -37,10 +37,10 @@ typedef int pthread_t;
 #define LF "\n"
 
 enum report_type {
-	ReportType_Event,
-	ReportType_Transaction,
-	ReportType_Heartbeat,
-	ReportType_Metric
+	ReportType_Event = 1,
+	ReportType_Transaction = 2,
+	ReportType_Heartbeat = 3,
+	ReportType_Metric = 4
 };
 typedef enum report_type report_type;
 

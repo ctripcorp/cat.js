@@ -40,9 +40,13 @@ void inner_next_message_id(char** buffer) {
 	int n1 = log10(timestamp)+1;
 	char* number_buf_1 = mem(n1,sizeof(char));
 
-	//snprintf not work
+
+#ifdef _WIN32
+	sprintf(number_buf_1, "%ld", timestamp);
+#else
 	snprintf(number_buf_1, n1, "%ld", timestamp);
-	//sprintf(number_buf_1, "%ld", timestamp);
+#endif
+
 	strcat(buf, number_buf_1);
 	f_mem(number_buf_1);
 
@@ -50,9 +54,13 @@ void inner_next_message_id(char** buffer) {
 
     int n2 = log10(cat_context.msg_index)+1;
 	char* number_buf_2 = mem(n2,sizeof(char));
-	//snprintf not work
+	
+#ifdef _WIN32
+	sprintf(number_buf_2, "%d", cat_context.msg_index);
+#else
 	snprintf(number_buf_2, n2, "%d", cat_context.msg_index);
-	//sprintf(number_buf_2, "%d", cat_context.msg_index);
+#endif
+
 	strcat(buf, "1");
 	f_mem(number_buf_2);
 }

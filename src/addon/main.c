@@ -13,15 +13,19 @@
 #include "manager.h"
 
 int main(void) {
+
 	srand(time(NULL));
 	int r = rand() % 30000;
 	char str[15];
 	sprintf(str, "%d", r);
-	cat_message *message = new_transaction(str, "root");
+	cat_message *message = new_transaction("vv", "root");
+	printf("%d",message->reportType);
 	trans_complete_with_status(message, "0");
+	
 	printf("finish");
 #ifdef _WIN32
 	system("pause");
 #endif
+	
 	return EXIT_SUCCESS;
 }

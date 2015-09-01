@@ -7,7 +7,10 @@
 
 #ifndef SRC_ADDON_DEPS_C_CONFIG_H_
 #define SRC_ADDON_DEPS_C_CONFIG_H_
+
+#ifndef _WIN32
 typedef long fx_long;
+#endif
 
 #include <string.h>
 #include <stdlib.h>

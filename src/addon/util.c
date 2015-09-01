@@ -44,18 +44,34 @@ int setint_to_buffer_begin(char* buffer, int i) {
 	return 4;
 }
 
+
+
 void getFormatTime(char** buf) {
 	char fmt[64];
 	*buf = (char*) malloc(24 * sizeof(char));
 #ifdef _WIN32
+	/*
 	struct timeval2 tv;
 	struct timezone2 tz;
 	gettimeofday(&tv, &tz);
-	gettimeofday(&tv, NULL);
+	struct tm *tm;
 	if ((tm = localtime(&tv.tv_sec)) != NULL) {
 		strftime(fmt, sizeof fmt, "%Y-%m-%d %H:%M:%S.%%03d", tm);
-		snprintf(*buf, 24, fmt, tv.tv_usec);
+		sprintf(*buf, fmt, tv.tv_usec);
 	}
+	*/
+	
+	//workaround for above solution
+	time_t timer;
+	char buffer[20];
+	struct tm* tm_info;
+
+	time(&timer);
+	tm_info = localtime(&timer);
+
+	strftime(buffer, 26, "%Y-%m-%d %H:%M:%S", tm_info);
+	strcpy(*buf, buffer);
+	strcat(*buf, ".000");
 #else
 
 	struct timeval tv;
@@ -114,7 +130,8 @@ void c11_support() {
 
 int c_get_threadid(){
 #ifdef _WIN32
-	return GetCurrentThreadId();
+	int x = GetCurrentThreadId();
+	return x;
 #else
 	return (int)pthread_self();
 #endif

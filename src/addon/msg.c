@@ -128,10 +128,13 @@ void set_complete(struct cat_message* message){
 
 void send_tree(struct cat_message* message) {
 #ifdef _WIN32
+	do_send(message);
+	/*
 	int val = 0;
 	HANDLE handle;
 	handle = (HANDLE)_beginthread(do_send, 0, &val); // create thread
 	WaitForSingleObject(handle, INFINITE);
+	*/
 #else
 	pthread_t tid;
 	int err;
@@ -146,13 +149,14 @@ void send_tree(struct cat_message* message) {
 
 
 	//TODO free may not corrent
+	/*
 	while (1){
 		cat_message* temp = pop();
 		if (temp == NULL)
 			break;
 		else
 			free_tree(message);
-	}
+	}*/
 }
 
 void* do_send(void *arg){
@@ -190,7 +194,11 @@ void* do_send(void *arg){
 	socket_send(buf.buffer, buf.writen_size);
 
 	push(message);
+#ifdef _WIN32
+#else
 	c_exit_thread();
+#endif
+
 	return NULL;
 }
 
@@ -381,12 +389,19 @@ int encode_header(struct default_message_tree* tree, struct channel_buffer *buf)
 }
 
 int buf_write_int(struct channel_buffer *buf,int i){
+#ifdef _WIN32
+	char foo[30];
+	sprintf(foo,"%d",i);
+	int r = write_to_buffer(buf, foo);
+	return r;
+#else
 	int n = log10(i)+1;
-	char* number_buf = mem(n,sizeof(char));
+	char* number_buf = mem(n, sizeof(char));
 	snprintf(number_buf, n, "%d", i);
 	int r = write_to_buffer(buf, number_buf);
 	f_mem(number_buf);
 	return r;
+#endif
 }
 
 int buf_write_long(struct channel_buffer *buf,long i){
