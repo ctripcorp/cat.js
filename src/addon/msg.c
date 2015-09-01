@@ -126,19 +126,12 @@ void set_complete(struct cat_message* message){
 
 }
 
-#ifdef _WIN32
-DWORD WINAPI ThreadFunc(void* data) {
-	do_send(data);
-	return 0;
-}
-#endif
-
 void send_tree(struct cat_message* message) {
 #ifdef _WIN32
-	HANDLE thread = CreateThread(NULL, 0, ThreadFunc, NULL, 0, NULL);
-	if (thread) {
-		// Optionally do stuff, such as wait on the thread.
-	}
+	int val = 0;
+	HANDLE handle;
+	handle = (HANDLE)_beginthread(do_send, 0, &val); // create thread
+	WaitForSingleObject(handle, INFINITE);
 #else
 	pthread_t tid;
 	int err;
@@ -221,11 +214,12 @@ void settimeout(struct cat_message* message, int sec){
 	if((int)message->msg_transaction->t_start == 1)
 		cancel_timeout(message);
 #ifdef _WIN32
-	/*HANDLE thread =*/ CreateThread(NULL, 0, ThreadFunc, NULL, 0, NULL);
-	//TODO FIX ME
-	//if (thread) {
+	int val = 0;
+	HANDLE handle;
+	handle = (HANDLE)_beginthread(do_send, 0, &val); // create thread
+	WaitForSingleObject(handle, INFINITE);
+
 	message->msg_transaction->t_start = 1;
-	//}
 #else
 	int err;
 	err = pthread_create(&message->msg_transaction->tid, NULL, &do_timeout, message);
@@ -240,7 +234,7 @@ void* do_timeout(void *arg)
 {
 	struct cat_message* message = arg;
 #ifdef _WIN32
-	//TODO FIX ME
+	Sleep(message->msg_transaction->timeout*1000);
 #else
 	sleep(message->msg_transaction->timeout);
 #endif

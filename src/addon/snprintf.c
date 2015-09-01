@@ -1557,9 +1557,11 @@ rpl_asprintf(va_alist) va_dcl
 	VA_START(ap, format);
 	VA_SHIFT(ap, ret, char **);
 	VA_SHIFT(ap, format, const char *);
-	len = 0;
-	//TODO FIX ME
-	//len = vasprintf(ret, format, ap);
+
+	//stur: move from mingw to vs
+	//http://stackoverflow.com/questions/29724546/moved-from-cygwin-to-visualstudio2013-error-lnk2019-snprintf-c
+	//mingw:len = vasprintf(ret, format, ap);
+	len = _snprintf(ret, format, ap);
 	va_end(ap);
 	return len;
 }

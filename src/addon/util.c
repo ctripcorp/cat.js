@@ -6,7 +6,7 @@
  */
 
 #ifdef _WIN32
-#include "gettimeofday.h"
+#include "win32.h"
 #else
 #include <pthread.h>
 #include <sys/time.h>
@@ -102,21 +102,18 @@ void c11_support() {
 
 int c_get_threadid(){
 #ifdef _WIN32
-	//TODO FIX ME
-	//return GetCurrentThreadId();
-	return 1;
+	return GetCurrentThreadId();
 #else
 	return (int)pthread_self();
 #endif
 }
 
 void c_exit_thread(){
+	int ret1 = 100;
 #ifdef _WIN32
-	//TODO FIX ME
-	//ExitThread();
+	ExitThread(ret1);
 	return 1;
 #else
-	int ret1 = 100;
 	pthread_exit(&ret1);
 #endif
 }

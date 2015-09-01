@@ -8,16 +8,6 @@
 #ifndef SRC_ADDON_MESSAGE_H_
 #define SRC_ADDON_MESSAGE_H_
 
-#ifdef _WIN32
-#include <windows.h>
-typedef int pthread_t;
-#include "win32.h"
-#else
-#include <sys/time.h>
-#include <unistd.h>
-#include <pthread.h>
-#endif
-
 #include "manager.h"
 #include "util.h"
 #include "socket.h"
@@ -26,6 +16,17 @@ typedef int pthread_t;
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include <process.h>
+#ifdef _WIN32
+typedef int pthread_t;
+#include "win32.h"
+#else
+#include <sys/time.h>
+#include <unistd.h>
+#include <pthread.h>
+#endif
+
+
 
 #define MAX_BUFFER_SIZE 8192
 #define TRANSACTION_CHILD_SIZE 1000

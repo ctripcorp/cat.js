@@ -1,6 +1,6 @@
 {
   "name": "catclient",
-  "version": "1.0.1",
+  "version": "1.1.1",
   "description": "cat node client",
   "main": "src/cat.js",
   "author": "stur",

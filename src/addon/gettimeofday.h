@@ -9,9 +9,11 @@
 #define SRC_ADDON_DEPS_GETTIMEOFDAY_H_
 
 #ifdef _WIN32
-typedef int bool;
-#define true 1
-#define false 0
+#ifndef __cplusplus
+typedef unsigned char bool;
+static const bool false = 0;
+static const bool true = 1;
+#endif
 
 /* IN UNIX the use of the timezone struct is obsolete;
 I don't know why you use it. See http://linux.about.com/od/commands/l/blcmdl2_gettime.htm

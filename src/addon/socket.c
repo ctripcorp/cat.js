@@ -8,17 +8,16 @@
 #include "socket.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #ifdef _WIN32
-#include <stdlib.h>
-#include <winsock2.h>
+//#include <winsock2.h>
 #pragma  comment(lib,"ws2_32.lib")
 #else
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "socket.h"
-#include <stdlib.h>
 #include <fcntl.h>
 #endif
 

@@ -63,8 +63,7 @@ void setup(){
 
 	str_copy(tree.ThreadGroupName,THREAD_GROUP_NAME);
 #ifdef _WIN32
-	//TODO
-	str_copy(tree.HostName, "DSTTest");
+	gethostname(tree.HostName, 1024);
 #else
 	gethostname(tree.HostName, 1024);
 #endif

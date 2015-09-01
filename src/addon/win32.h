@@ -9,6 +9,8 @@
 #define SRC_ADDON_WIN32_H_
 
 #ifdef _WIN32
+#include <windows.h>
+#include "gettimeofday.h"
 #define snprintf rpl_snprintf
 #endif
 
