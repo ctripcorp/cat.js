@@ -78,7 +78,7 @@ void init_ip() {
 	serv.sin_family = AF_INET;
 
 	serv.sin_addr.s_addr = inet_addr(/*"8.8.8.8"*/cat_config.server);
-	serv.sin_port = htons(dns_port);
+	serv.sin_port = htons(cat_config.port);
 
 	int err = connect(sock, (const struct sockaddr*) &serv, sizeof(serv));
 	struct sockaddr_in name;

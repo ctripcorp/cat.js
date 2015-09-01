@@ -16,10 +16,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#include <process.h>
+
 #ifdef _WIN32
 typedef int pthread_t;
 #include "win32.h"
+#include <process.h>
 #else
 #include <sys/time.h>
 #include <unistd.h>
