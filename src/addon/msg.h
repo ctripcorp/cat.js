@@ -103,7 +103,6 @@ extern g_config cat_config;
 extern default_message_tree tree;
 extern void setup();
 extern void add_message(cat_message* message);
-extern long get_tv_usec();
 extern void str_copy(char* dest,char* source);
 
 int write_to_buffer(struct channel_buffer *buf, char * data);

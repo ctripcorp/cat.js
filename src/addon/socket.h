@@ -14,7 +14,9 @@ void init_ip();
 
 void win_send(char* buf, int sendsize);
 void linux_send(char* buf,int sendsize);
-
 void socket_send(char* buf, int sendsize);
+#ifdef _WIN32
+SOCKET win_client();
+#endif
 
 #endif /* SRC_ADDON_SOCKET_H_ */

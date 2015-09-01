@@ -12,6 +12,9 @@
 #include <windows.h>
 #include "gettimeofday.h"
 #define snprintf rpl_snprintf
+typedef long long  c_long;
+#else
+typedef long c_long;
 #endif
 
 

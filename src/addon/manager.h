@@ -62,7 +62,7 @@ void setup();
 void inner_next_message_id(char** buffer);
 void next_message_id();
 extern char * number_to_array(unsigned int number);
-extern long get_tv_usec();
+extern c_long get_tv_usec();
 extern void init_ip();
 extern void str_copy(char* dest,char* source);
 

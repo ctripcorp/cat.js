@@ -50,24 +50,33 @@ void getFormatTime(char** buf) {
 
 #ifdef _WIN32
 	struct timeval2 tv;
+	struct timezone2 tz;
+	gettimeofday(&tv, &tz);
 #else
-	struct timeval tv;
+	struct timeval tv;	
+	gettimeofday(&tv, NULL);
 #endif
 	struct tm *tm;
 
-	gettimeofday(&tv, NULL);
 	if ((tm = localtime(&tv.tv_sec)) != NULL) {
 		strftime(fmt, sizeof fmt, "%Y-%m-%d %H:%M:%S.%%03d", tm);
-		snprintf(*buf, 24, fmt, tv.tv_usec);
+		//snprintf not work
+		//snprintf(*buf, 24, fmt, tv.tv_usec);
+		sprintf(*buf, fmt, tv.tv_usec);
 	}
 }
 
-long get_tv_usec() {
+c_long get_tv_usec() {
 #ifdef _WIN32
 	struct timeval2 tv;
 	struct timezone2 tz;
 	gettimeofday(&tv, &tz);
-	return tv.tv_sec*1000000L+tv.tv_usec;
+#ifdef _WIN32
+	c_long temp = tv.tv_sec * 1000000LL + tv.tv_usec;
+#else
+	c_long temp = tv.tv_sec * 1000000L + tv.tv_usec;
+#endif
+	return temp;
 #else
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
@@ -86,9 +95,13 @@ void* mem(int count, int eltsize){
 	}
 	return p;
 }
+
 void f_mem(void* p){
+#ifdef _WIN32
+#else
 	free(p);
-	p=NULL;
+	p = NULL;
+#endif
 }
 
 /* not used yet */

@@ -30,20 +30,20 @@ void socket_send(char* buf, int sendsize){
 }
 
 #ifdef _WIN32
-void win_send(char* buf, int sendsize){
 
+SOCKET win_client(){
 	WORD sockVersion = MAKEWORD(2, 2);
 	WSADATA data;
 	if (WSAStartup(sockVersion, &data) != 0)
 	{
-		return;
+		return NULL;
 	}
 
 	SOCKET sclient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (sclient == INVALID_SOCKET)
 	{
 		printf("invalid socket !");
-		return;
+		return NULL;
 	}
 
 	struct sockaddr_in serAddr;
@@ -54,8 +54,14 @@ void win_send(char* buf, int sendsize){
 	{
 		printf("connect error !");
 		closesocket(sclient);
-		return;
+		return NULL;
 	}
+	return sclient;
+}
+
+void win_send(char* buf, int sendsize){
+
+	SOCKET sclient = win_client();
 
 	send(sclient, buf, sendsize, 0);
 
@@ -65,39 +71,21 @@ void win_send(char* buf, int sendsize){
 
 void init_ip() {
 
-	int dns_port = 53;
-	struct sockaddr_in serv;
-	int sock = socket(AF_INET, SOCK_DGRAM, 0);
+	SOCKET sclient = win_client();
 
-	//Socket could not be created
-	if (sock < 0) {
-		perror("Socket error");
-	}
-
-	memset(&serv, 0, sizeof(serv));
-	serv.sin_family = AF_INET;
-
-	serv.sin_addr.s_addr = inet_addr(/*"8.8.8.8"*/cat_config.server);
-	serv.sin_port = htons(cat_config.port);
-
-	int err = connect(sock, (const struct sockaddr*) &serv, sizeof(serv));
 	struct sockaddr_in name;
 	int namelen = sizeof(name);
-	err = getsockname(sock, (struct sockaddr*) &name, &namelen);
+	int err = getsockname(sclient, (struct sockaddr*) &name, &namelen);
 	if (err){
 		printf("Error code:%d", err);
 	}
-	//const char* p = inet_ntop(AF_INET, &name.sin_addr, cat_config.local_ip, 100);
-	//printf("Local Address: %08x (%s)\n", name.sin_addr.s_addr, inet_ntoa(name.sin_addr));
+
 	unsigned char *ip = (unsigned char *)&name.sin_addr.s_addr;
 	sprintf(&cat_context.local_ip_hex[0], "%02x%02x%02x%02x", ip[0], ip[1], ip[2], ip[3]);
 	cat_context.local_ip = inet_ntoa(name.sin_addr);
 	sprintf(cat_context.local_ip, "%s", inet_ntoa(name.sin_addr));
-	//if (p == NULL) {
-	//printf("Error number : %d . Error message : %s \n", errno, strerror(errno));
-	//}
-
-	close(sock);
+	closesocket(sclient);
+	WSACleanup();
 }
 #else
 void linux_send(char* buf, int sendsize) {
