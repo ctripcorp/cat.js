@@ -10,7 +10,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-typedef pthread_t int
+typedef int pthread_t;
 #include "win32.h"
 #else
 #include <sys/time.h>
