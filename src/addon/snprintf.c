@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 /* $Id: snprintf.c,v 1.9 2008/01/20 14:02:00 holger Exp $ */
 
 /*
@@ -2109,3 +2111,5 @@ main(void)
 #endif	/* TEST_SNPRINTF */
 
 /* vim: set joinspaces textwidth=80: */
+
+#endif

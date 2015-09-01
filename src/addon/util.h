@@ -11,7 +11,7 @@
 #define KB 1024
 
 #ifdef _WIN32
-#define snprintf rpl_snprintf
+#include "win32.h"
 #endif
 
 int write_to_buffer_raw(char *buf, char * data, int length, int index);

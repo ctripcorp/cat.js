@@ -8,23 +8,20 @@
 #ifndef SRC_ADDON_DEPS_C_CONFIG_H_
 #define SRC_ADDON_DEPS_C_CONFIG_H_
 
-#ifdef _WIN32
-#define snprintf rpl_snprintf
-#endif
 
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <time.h>
+#include <math.h>
 
 #ifdef _WIN32
-
+#include "win32.h"
 #else
 #include <unistd.h>
 #include <sys/time.h>
 #endif
-
-#include <time.h>
 
 #define DEFAULT_DOMAIN "nodejs"
 #define SPLIT "-"

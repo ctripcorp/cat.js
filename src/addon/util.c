@@ -106,7 +106,7 @@ int c_get_threadid(){
 	//return GetCurrentThreadId();
 	return 1;
 #else
-	return pthread_self();
+	return (int)pthread_self();
 #endif
 }
 

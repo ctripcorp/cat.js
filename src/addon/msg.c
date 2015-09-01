@@ -5,20 +5,7 @@
  *      Author: Stur
  */
 
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <unistd.h>
-#include <pthread.h>
-#endif
-
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
 #include "msg.h"
-#include "manager.h"
-
 cat_message *root;
 
 flush_stack flush={.top = -1};
@@ -127,7 +114,7 @@ void set_complete(struct cat_message* message){
 	if(message->msg_transaction->t_start == 1){
 		int id = c_get_threadid();
 
-		if (id == message->msg_transaction->tid)
+		if (id == (int)message->msg_transaction->tid)
 		{
 			/* complete running in timeout thread */
 			c_exit_thread();
@@ -231,7 +218,7 @@ void cancel_timeout(struct cat_message* message){
 
 void settimeout(struct cat_message* message, int sec){
 	message->msg_transaction->timeout = sec;
-	if(message->msg_transaction->t_start == 1)
+	if((int)message->msg_transaction->t_start == 1)
 		cancel_timeout(message);
 #ifdef _WIN32
 	/*HANDLE thread =*/ CreateThread(NULL, 0, ThreadFunc, NULL, 0, NULL);

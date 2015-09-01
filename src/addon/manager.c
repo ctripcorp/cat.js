@@ -5,9 +5,7 @@
  *      Author: Stur
  */
 
-#include <time.h>
-#include <stdlib.h>
-#include <math.h>
+
 #include "manager.h"
 #include "util.h"
 
