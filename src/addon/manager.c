@@ -23,8 +23,13 @@ void set_server(char* server){
 
 void inner_next_message_id(char** buffer) {
 	char* buf = *buffer;
-	c_long x = get_tv_usec();
-	c_long timestamp = x/3600000000LL;
+	fx_long x = get_tv_usec();
+#ifdef _WIN32
+	fx_long timestamp = x/3600000000LL;
+#else
+	fx_long timestamp = x/3600000000L;
+#endif
+
 	cat_context.msg_index++;
 
 	strcpy(buf, cat_config.domain);
@@ -36,8 +41,8 @@ void inner_next_message_id(char** buffer) {
 	char* number_buf_1 = mem(n1,sizeof(char));
 
 	//snprintf not work
-	//snprintf(number_buf_1, n1, "%ld", timestamp);
-	sprintf(number_buf_1, "%ld", timestamp);
+	snprintf(number_buf_1, n1, "%ld", timestamp);
+	//sprintf(number_buf_1, "%ld", timestamp);
 	strcat(buf, number_buf_1);
 	f_mem(number_buf_1);
 
@@ -46,9 +51,9 @@ void inner_next_message_id(char** buffer) {
     int n2 = log10(cat_context.msg_index)+1;
 	char* number_buf_2 = mem(n2,sizeof(char));
 	//snprintf not work
-	//snprintf(number_buf_2, n2, "%d", cat_context.msg_index);
-	sprintf(number_buf_2, "%d", cat_context.msg_index);
-	strcat(buf, number_buf_2);
+	snprintf(number_buf_2, n2, "%d", cat_context.msg_index);
+	//sprintf(number_buf_2, "%d", cat_context.msg_index);
+	strcat(buf, "1");
 	f_mem(number_buf_2);
 }
 

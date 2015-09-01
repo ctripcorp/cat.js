@@ -7,7 +7,7 @@
 
 #ifndef SRC_ADDON_DEPS_C_CONFIG_H_
 #define SRC_ADDON_DEPS_C_CONFIG_H_
-
+typedef long fx_long;
 
 #include <string.h>
 #include <stdlib.h>
@@ -62,7 +62,7 @@ void setup();
 void inner_next_message_id(char** buffer);
 void next_message_id();
 extern char * number_to_array(unsigned int number);
-extern c_long get_tv_usec();
+extern fx_long get_tv_usec();
 extern void init_ip();
 extern void str_copy(char* dest,char* source);
 

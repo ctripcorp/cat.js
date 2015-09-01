@@ -13,7 +13,7 @@
 int write_to_buffer_raw(char *buf, char * data, int length, int index);
 int setint_to_buffer_begin(char* buffer, int i);
 void getFormatTime(char** buf);
-c_long get_tv_usec();
+fx_long get_tv_usec();
 void str_copy(char* dest, char* source);
 void* mem(int count, int eltsize);
 void f_mem(void* p);

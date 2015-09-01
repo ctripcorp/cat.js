@@ -46,36 +46,35 @@ int setint_to_buffer_begin(char* buffer, int i) {
 
 void getFormatTime(char** buf) {
 	char fmt[64];
-	*buf = (char*)malloc(24 * sizeof(char));
-
+	*buf = (char*) malloc(24 * sizeof(char));
 #ifdef _WIN32
 	struct timeval2 tv;
 	struct timezone2 tz;
 	gettimeofday(&tv, &tz);
-#else
-	struct timeval tv;	
 	gettimeofday(&tv, NULL);
-#endif
-	struct tm *tm;
-
 	if ((tm = localtime(&tv.tv_sec)) != NULL) {
 		strftime(fmt, sizeof fmt, "%Y-%m-%d %H:%M:%S.%%03d", tm);
-		//snprintf not work
-		//snprintf(*buf, 24, fmt, tv.tv_usec);
-		sprintf(*buf, fmt, tv.tv_usec);
+		snprintf(*buf, 24, fmt, tv.tv_usec);
 	}
+#else
+
+	struct timeval tv;
+	struct tm *tm;
+
+	gettimeofday(&tv, NULL);
+	if ((tm = localtime(&tv.tv_sec)) != NULL) {
+		strftime(fmt, sizeof fmt, "%Y-%m-%d %H:%M:%S.%%03d", tm);
+		snprintf(*buf, 24, fmt, tv.tv_usec);
+	}
+#endif
 }
 
-c_long get_tv_usec() {
+fx_long get_tv_usec() {
 #ifdef _WIN32
 	struct timeval2 tv;
 	struct timezone2 tz;
 	gettimeofday(&tv, &tz);
-#ifdef _WIN32
-	c_long temp = tv.tv_sec * 1000000LL + tv.tv_usec;
-#else
-	c_long temp = tv.tv_sec * 1000000L + tv.tv_usec;
-#endif
+	fx_long temp = tv.tv_sec * 1000000LL + tv.tv_usec;
 	return temp;
 #else
 	struct timeval tv;
