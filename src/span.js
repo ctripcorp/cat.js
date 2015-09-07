@@ -107,7 +107,7 @@ var spanProto=Span.prototype;
 * @apiParam {int} timeout
 * @apiExample {curl} Example usage:
 * var t = cat.span("Type","Name");
-* t.timeout(3000);
+* t.timeout(3);
 */
 spanProto.timeout =function(timeout_sec){
 	if(this._timer){

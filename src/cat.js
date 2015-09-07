@@ -94,6 +94,8 @@ Cat.prototype={
 	 	/* set default timeout */
 	 	if (appConfig['timeout']){
 	 		span.timeout(appConfig['timeout']);
+	 	}else{
+	 		span.timeout(10);
 	 	}
 
 	 	return span;
@@ -118,8 +120,13 @@ Cat.prototype={
 	 		keyValuePair = key.toString();
 	 	}
 
-	 	if(arguments.length==5){
-	 		keyValuePair=key+"="+value;
+	 	if(arguments.length%2 != 0 && arguments.length>=5){
+
+	 		for (var i = 3; i <arguments.length; i+=2) {
+	 			var temp=arguments[i]+"="+arguments[i+1];
+	 			keyValuePair+=temp;
+	 		};
+	
 	 	}
 
 	 	addon.glue_log_event(type,name,status,keyValuePair);
