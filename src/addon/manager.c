@@ -26,7 +26,8 @@ void set_server(const char* server[], int len) {
 	if (len > 4)
 		len = 4;
 
-	for (int i = 0; i < len; i++) {
+	int i;
+	for (i = 0; i < len; i++) {
 		strncpy(context->serv->server[i], server[i], strlen(server[i]));
 	}
 
