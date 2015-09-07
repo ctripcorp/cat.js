@@ -6,174 +6,152 @@
  */
 
 #include "msg.h"
-cat_message *root;
 
-flush_stack flush={.top = -1};
+void complete_message_with_status(struct message* msg, char* status) {
+	copy_string(msg->status, status, CHAR_BUFFER_SIZE);
+	complete_message(msg);
+}
 
-void push(cat_message* msg){
-	if (flush.top == (MAX_BUFFER_SIZE - 1))
-	{
-		printf ("Stack is Full\n");
-		return;
+void complete_message(struct message* msg) {
+	switch (msg->reportType) {
+	case ReportType_Transaction:
+		complete_trans(msg);
+		break;
+	case ReportType_Event:
+		complete_event(msg);
+		break;
+	default:
+		break;
 	}
-	else
-	{
-		flush.top = flush.top + 1;
-		flush.stk[flush.top] = msg;
-	}
-	return;
 }
 
-cat_message*  pop(void){
-	cat_message* num;
-    if (flush.top == - 1)
-    {
-        return NULL;
-    }
-    else
-    {
-        num = flush.stk[flush.top];
-        flush.top = flush.top - 1;
-    }
-    return num;
+void complete_event(struct message* evt) {
+	evt->completed = 1;
 }
 
-int write_to_buffer(struct channel_buffer *buf, char * data) {
+void complete_trans(struct message* msg) {
+	transaction *ptr_trans = msg->trans;
 
-	if (data == NULL) {
-		data = "null";
-	}
-	int length = strlen(data);
-	write_to_buffer_raw(buf->buffer, data, length, buf->buffer_pointer);
-	buf->buffer_pointer += length;
-	return length;
-}
+	ptr_trans->docomplete = 1; /* transaction has explicit call completed */
 
-int write_char_to_buffer(struct channel_buffer *buf, char data) {
-	buf->buffer[buf->buffer_pointer] = data;
-	buf->buffer_pointer++;
-	return 1;
-}
+	if (msg->completed == 1)
+		return; /* message already completed */
 
-void trans_complete_with_status(struct cat_message* message, char* status) {
-	message->Status = status;
+	if (ptr_trans->is_root == 1) { /* message is root transaction */
 
-	/* returned value used for clear timeout which is set in node */
-	trans_complete(message);
-}
-
-void trans_complete(struct cat_message* message) {
-
-	if(message->msg_transaction != NULL){
-		/* transaction has explicit call complete */
-		/* if all sub trans has complete this trans will auto complete */
-		message->msg_transaction->docomplete = 1;
-	}else{
-		 /* message is not a transaction */
-		return;
-	}
-
-	if(message->complete == 1) return; // message already complete
-
-	if (message->msg_transaction->ts_parent == NULL/* this is a root message */) {
-		if(message->msg_transaction->count_fork == 0/* message is transaction and its child has complete */){
-			set_complete(message);
-			send_tree(message);
+		if (ptr_trans->count_fork == 0) { /* all its child has completed */
+			set_trans_completed(msg);
+			message_flush(msg);
 		}
-	} else if(--message->msg_transaction->ts_parent->msg_transaction->count_fork == 0){
-		/* message is last complete child, auto complete its parent */
-		set_complete(message);
-		if(message->msg_transaction->ts_parent->msg_transaction->docomplete == 1){
-			trans_complete(message->msg_transaction->ts_parent);
-		}
+
+		/* else: do nothing, just wait for sub transaction complete */
+
+	} else {
+		set_trans_completed(msg);
+		do_join(msg);
 	}
 }
 
-void timeout(struct cat_message* message) {
-	if(message->complete == 1) return; // message has complete
+void do_join(struct message* msg) {
+	message *ptr_parent = msg->trans_parent;
 
-	if (message->msg_transaction->ts_parent == NULL) {
-		 /* this is a root message */
-		set_complete(message);
-		send_tree(message);
-	} else if(--message->msg_transaction->ts_parent->msg_transaction->count_fork == 0){
-		/* message is last complete child, auto complete its parent */
-		set_complete(message);
-		trans_complete(message->msg_transaction->ts_parent);
+	if (--ptr_parent->trans->count_fork == 0 /* do join */) {
+		/* this transaction is last completed child, */
+		if (ptr_parent->trans->is_root) {
+			if (ptr_parent->trans->docomplete == 1) {
+				/* root transaction must explicit call complete */
+				complete_trans(ptr_parent);
+			}
+		} else {
+			/* auto completed its parent  */
+			complete_trans(ptr_parent);
+		}
+
+	}
+
+	/* else: Transaction is not last child */
+}
+
+void timeout(struct message* msg) {
+	if (msg->completed == 1)
+		return; /* message already completed */
+
+	transaction *ptr_trans = msg->trans;
+
+	copy_string(msg->status, "TIMEOUT", CHAR_BUFFER_SIZE);
+
+	if (ptr_trans->is_root == 1) { /* message is root transaction */
+		set_trans_completed(msg);
+		message_flush(msg);
+	} else {
+		set_trans_completed(msg);
+		do_join(msg);
 	}
 }
 
-void set_complete(struct cat_message* message){
-	message->complete = 1;
-	getFormatTime(&message->msg_transaction->end_format_time);
-	long current = get_tv_usec();
-	message->msg_transaction->endtime = current;
-	message->msg_transaction->duration = current - message->Timestamp;
-	printf("--Transaction[%p] has complete,start[%ld],end[%ld]\n",message,message->Timestamp,current);
+void set_trans_completed(struct message* msg) {
+	msg->completed = 1;
+	get_format_time(&buf_ptr);
+	strncpy(msg->trans->end_format_time, small_buf, 24);
 
-	if(message->msg_transaction->t_start == 1){
-		int id = c_get_threadid();
+	LOG(LOG_INFO, "-- Transaction[%p] complete at time:%s", msg, msg->trans->end_format_time);
 
-		if (id == (int)message->msg_transaction->tid)
-		{
-			/* complete running in timeout thread */
-			c_exit_thread();
-		}
-		else{
-			cancel_timeout(message);
-		}
-	}
-
+	c_long current = get_tv_usec();
+	msg->trans->endtime = current;
+	msg->trans->duration = current - msg->timestamp;
 }
 
-void send_tree(struct cat_message* message) {
+void message_flush(struct message* msg) {
+	do_send(msg);
+#if 0 //TODO resolve thread issue
 #ifdef _WIN32
 	do_send(message);
 	/*
-	int val = 0;
-	HANDLE handle;
-	handle = (HANDLE)_beginthread(do_send, 0, &val); // create thread
-	WaitForSingleObject(handle, INFINITE);
-	*/
+	 int val = 0;
+	 HANDLE handle;
+	 handle = (HANDLE)_beginthread(do_send, 0, &val); // create thread
+	 WaitForSingleObject(handle, INFINITE);
+	 */
 #else
 	pthread_t tid;
 	int err;
 	err = pthread_create(&tid, NULL, &do_send, message);
 	if (err != 0)
-		printf("\ncan't create thread :[%s]", strerror(err));
-
+	printf("\ncan't create thread :[%s]", strerror(err));
 
 	void* status;
 	pthread_join(tid, &status);
 #endif
 
-
 	//TODO free may not corrent
 	/*
-	while (1){
-		cat_message* temp = pop();
-		if (temp == NULL)
-			break;
-		else
-			free_tree(message);
-	}*/
+	 while (1){
+	 message* temp = pop();
+	 if (temp == NULL)
+	 break;
+	 else
+	 free_tree(message);
+	 }*/
+#endif
 }
 
-void* do_send(void *arg){
-	struct cat_message* message = arg;
-	add_message(message);
-	struct channel_buffer buf;
-	encode(&tree, &buf);
-	printf("[info]Raw Text:\n");
+void* do_send(void *arg) {
+	struct message* msg = arg;
+	add_message(msg);
+	struct byte_buf *buf = init_buf();
+	encode(context, buf);
+
+	/* print raw message data */
+	LOG1(LOG_INFO, "[INFO]Raw Text:\n");
 	int i;
-	for (i = 0; i < buf.buffer_pointer; i++) {
-		printf("%c", buf.buffer[i]);
+	for (i = 0; i < buf->ptr; i++) {
+		LOG1(LOG_INFO, "%c", buf->buffer[i]);
 	}
 
-#if 0
+#if 0	/* manual check binary error, comment this on release */
 	printf("Raw Binary:\n");
-	for (int i = 0; i < buf.buffer_pointer; i++) {
-		char c=buf.buffer[i];
+	for (int i = 0; i < buf->ptr; i++) {
+		char c=buf->buffer[i];
 		if(c==9) {
 			printf(" TAB ");
 		}
@@ -181,325 +159,253 @@ void* do_send(void *arg){
 			printf("\n");
 		}
 		else if((c>=65&&c<=90)||(c>=97&&c<=122)||(c>=48&&c<=57)||c=='.'||c=='-'||c==':'||c==32||i<4) {
-			printf("%d ", buf.buffer[i]);
+			printf("%d ", buf->buffer[i]);
 		} else {
-			printf("[%d] ", buf.buffer[i]);
-			printf("(%c)", buf.buffer[i]);
+			printf("[%d] ", buf->buffer[i]);
+			printf("(%c)", buf->buffer[i]);
 		}
 
 	}
 	printf("\n");
 #endif
 
-	socket_send(buf.buffer, buf.writen_size);
-
-	push(message);
-#ifdef _WIN32
-#else
-	c_exit_thread();
-#endif
+	socket_send(buf->buffer, buf->size);
 
 	return NULL;
 }
 
-cat_message* new_transaction(char* type, char* name) {
-	root = sub_transaction(type, name, NULL);
-	return root;
+message* new_transaction(char* type, char* name) {
+	message* root_trans = sub_transaction(type, name, NULL);
+	root_trans->trans->is_root = 1;
+	return root_trans;
 }
 
-void cancel_timeout(struct cat_message* message){
+#if 0
+void cancel_timeout(struct message* message) {
+
 #ifdef _WIN32
 	//TODO
 #else
-	pthread_cancel(message->msg_transaction->tid);
+	pthread_cancel(message->trans->tid);
 #endif
 
-	message->msg_transaction->t_start = 0;
+	message->trans->flush = 0;
+
 }
 
-void settimeout(struct cat_message* message, int sec){
-	message->msg_transaction->timeout = sec;
-	if((int)message->msg_transaction->t_start == 1)
-		cancel_timeout(message);
+void settimeout(struct message* message, int sec) {
+	message->trans->timeout = sec;
+	if ((int) message->trans->flush == 1)
+	cancel_timeout(message);
 #ifdef _WIN32
 	int val = 0;
 	HANDLE handle;
 	handle = (HANDLE)_beginthread(do_send, 0, &val); // create thread
 	WaitForSingleObject(handle, INFINITE);
 
-	message->msg_transaction->t_start = 1;
+	message->trans->flush = 1;
 #else
 	int err;
-	err = pthread_create(&message->msg_transaction->tid, NULL, &do_timeout, message);
+	err = pthread_create(&message->trans->tid, NULL, &do_timeout, message);
 	if (err != 0)
-		printf("\ncan't create thread :[%s]", strerror(err));
+	printf("\ncan't create thread :[%s]", strerror(err));
 	else
-		message->msg_transaction->t_start = 1;
+	message->trans->flush = 1;
 #endif
 }
 
-void* do_timeout(void *arg)
-{
-	struct cat_message* message = arg;
-#ifdef _WIN32
-	Sleep(message->msg_transaction->timeout*1000);
-#else
-	sleep(message->msg_transaction->timeout);
-#endif
-
+void* do_timeout(void *arg) {
+	struct message* message = arg;
+	csleep(message->trans->timeout);
 	timeout(message);
 	c_exit_thread();
-    return NULL;
+	return NULL;
 }
+#endif
 
-cat_message* sub_transaction(char* type, char* name, struct cat_message *parent) {
-	if (!cat_context.initialized) {
-		setup();
-	}
+message* sub_transaction(char* type, char* name, struct message *parent) {
+	message *msg = init_transaction();
 
-	cat_transaction *trans_temp = (cat_transaction*)mem(1,sizeof(cat_transaction));
-	cat_message *message_temp = (cat_message*) mem(1,sizeof(cat_message));
-	message_temp->Type = type;
-	message_temp->Name = name;
-	message_temp->reportType = ReportType_Transaction;
-	message_temp->Status = "0";
-	message_temp->Data = "";
-	message_temp->complete = 0;
-	trans_temp->Standalone = 0;
-	getFormatTime(&message_temp->format_time);
-	message_temp->Timestamp = get_tv_usec();
+	copy_nstr(msg->type, type);
+	copy_nstr(msg->name, name);
 
-	trans_temp->message_children_size = 0;
-	trans_temp->duration = 0;
-	trans_temp->count_fork = 0;
-	trans_temp->docomplete = 0;
-	trans_temp->ts_parent = parent;
+	get_format_time(&buf_ptr);
+	strncpy(msg->format_time, small_buf, 24);
 
-	message_temp->msg_transaction = trans_temp;
+	LOG(LOG_INFO,"transaction create time:%s",msg->format_time);
+
+	msg->timestamp = get_tv_usec();
+
+#ifdef _WIN32
+	LOG(LOG_INFO,"transaction timestamp:%lld",msg->timestamp);
+#else
+	LOG(LOG_INFO,"transaction timestamp:%ld",msg->timestamp);
+#endif
+
+	msg->trans_parent = parent;
 
 	if (parent != NULL) {
-		parent->msg_transaction->count_fork++;
-		parent->msg_transaction->messageChildren[parent->msg_transaction->message_children_size] = message_temp;
-		parent->msg_transaction->message_children_size++;
+		parent->trans->count_fork++;
+		parent->trans->children[parent->trans->children_size] = msg;
+		parent->trans->children_size++;
 	}
 
-	printf("--Transaction[%p] created\n",message_temp);
-	return message_temp;
+	LOG(LOG_INFO, "-- Transaction[%p] created", msg);
+	return msg;
 }
 
 void log_event(char* type, char* name, char* status, char* data) {
-	if (!cat_context.initialized) {
-		setup();
-	}
-
-	cat_message* evt0 = new_event(type,name,status,data);
-	send_tree(evt0);
+	message* evt = new_event(type, name, status, data);
+	message_flush(evt);
 }
 
-cat_message* new_event(char* type, char* name,char* status,char* data) {
-	cat_message* evt0 = (cat_message*) mem(1,sizeof(cat_message));
-	char* buf = mem(KB * KB,sizeof(char));
-	strcpy(buf, "");
-	strcat(buf,data);
-	evt0->Type = type;
-	evt0->Name = name;
-	evt0->reportType = ReportType_Event;
-	evt0->Data = buf;
-	evt0->Status = status;
-	evt0->Timestamp = 0;
-	getFormatTime(&evt0->format_time);
-	evt0->msg_transaction = NULL;
-
-	return evt0;
+message* new_event(char* type, char* name, char* status, char* data) {
+	message* evt = init_event();
+	set_c_string(evt->data, data);
+	copy_string(evt->type, type, CHAR_BUFFER_SIZE);
+	copy_string(evt->name, name, CHAR_BUFFER_SIZE);
+	copy_string(evt->status, status, CHAR_BUFFER_SIZE);
+	evt->timestamp = get_tv_usec();
+	get_format_time(&buf_ptr);
+	strncpy(evt->format_time, small_buf, 24);
+	return evt;
 }
 
-void free_tree(struct cat_message *root){
+message* add_data(struct message *event, char* data) {
 
-	if (root->reportType == ReportType_Event){
-		f_mem(root);
-	}
+	if (strlen(event->data->data) > 0)
+		cat_c_string(event->data, "&");
 
-	if (root->reportType == ReportType_Transaction){
-		int len = root->msg_transaction->message_children_size;
-		int i;
-		for (i = 0; i < len; i++) {
-			struct cat_message* child = root->msg_transaction->messageChildren[i];
-			free_tree(child);
-		}
-		f_mem(root);
-	}
-}
-
-void free_event(struct cat_message *event){
-	f_mem(event->Data);
-	f_mem(event);
-}
-
-void free_trans(struct cat_message *trans){
-	f_mem(trans->msg_transaction);
-	f_mem(trans);
-}
-
-cat_message* add_data(struct cat_message *event, char* data){
-
-	if(strlen(event->Data)>0)
-		strcat(event->Data, "&");
-	strcat(event->Data, data);
+	cat_c_string(event->data, data);
 
 	return event;
 }
 
-cat_message* sub_event(char* type, char* name, char* status,struct cat_message *parent) {
-	cat_message* evt0 = new_event(type,name,status,"");
+message* sub_event(char* type, char* name, char* status, struct message *parent) {
+	message* evt = new_event(type, name, status, "");
 
-	parent->msg_transaction->messageChildren[parent->msg_transaction->message_children_size] = evt0;
-	parent->msg_transaction->message_children_size++;
+	parent->trans->children[parent->trans->children_size] = evt;
+	parent->trans->children_size++;
 
-	return evt0;
+	return evt;
 }
 
-int encode_header(struct default_message_tree* tree, struct channel_buffer *buf) {
-
-	int count = 0;
-
-	count += write_to_buffer(buf, ID);
-	count += write_to_buffer(buf, TAB);
-	count += write_to_buffer(buf, tree->Domain);
-	count += write_to_buffer(buf, TAB);
-	count += write_to_buffer(buf, tree->HostName);
-	count += write_to_buffer(buf, TAB);
-	count += write_to_buffer(buf, tree->IpAddress);
-	count += write_to_buffer(buf, TAB);
-	count += write_to_buffer(buf, tree->ThreadGroupName);
-	count += write_to_buffer(buf, TAB);
-	count += buf_write_int(buf,tree->ThreadId);
-	count += write_to_buffer(buf, TAB);
-	count += write_to_buffer(buf, tree->ThreadName);
-	count += write_to_buffer(buf, TAB);
-	count += write_to_buffer(buf, tree->MessageId);
-	count += write_to_buffer(buf, TAB);
-	count += write_to_buffer(buf, tree->ParentMessageId);
-	count += write_to_buffer(buf, TAB);
-	count += write_to_buffer(buf, tree->RootMessageId);
-	count += write_to_buffer(buf, TAB);
-	count += write_to_buffer(buf, tree->SessionToken);
-	count += write_to_buffer(buf, LF);
-
-	return count;
+void encode_header(struct g_context* context, struct byte_buf *buf) {
+	write_str(buf, ID);
+	write_str(buf, TAB);
+	write_str(buf, context->domain);
+	write_str(buf, TAB);
+	write_str(buf, context->hostname);
+	write_str(buf, TAB);
+	write_str(buf, context->local_ip);
+	write_str(buf, TAB);
+	write_str(buf, CAT_NULL);
+	write_str(buf, TAB);
+	write_str(buf, "0");
+	write_str(buf, TAB);
+	write_str(buf, CAT_NULL);
+	write_str(buf, TAB);
+	write_str(buf, context->msg_id);
+	write_str(buf, TAB);
+	write_str(buf, CAT_NULL);
+	write_str(buf, TAB);
+	write_str(buf, CAT_NULL);
+	write_str(buf, TAB);
+	write_str(buf, CAT_NULL);
+	write_str(buf, LF);
 }
 
-int buf_write_int(struct channel_buffer *buf,int i){
-#ifdef _WIN32
-	char foo[30];
-	sprintf(foo,"%d",i);
-	int r = write_to_buffer(buf, foo);
-	return r;
-#else
-	int n = log10(i)+1;
-	char* number_buf = mem(n, sizeof(char));
-	snprintf(number_buf, n, "%d", i);
-	int r = write_to_buffer(buf, number_buf);
-	f_mem(number_buf);
-	return r;
-#endif
+void insert_int(struct byte_buf *buf, int value) {
+	int len = 4, i = 0;
+	char bytes[len];
+
+	convert_int(bytes, value);
+	do {
+		buf->buffer[i] = bytes[i];
+	} while (++i < len);
 }
 
-int buf_write_long(struct channel_buffer *buf,long i){
-	char foo[30];
-	sprintf(foo,"%ld",i);
-	int r = write_to_buffer(buf, foo);
-	return r;
-}
+void encode_line(struct message* msg, struct byte_buf *buf, char type, enum policy policy) {
+	write_char(buf, type);
 
-int encode_line(struct cat_message* message, struct channel_buffer *buf, char type, enum policy policy) {
-	int count = 0;
-
-	count += write_char_to_buffer(buf, type);
-
-	if (type == 'T' && message->reportType == ReportType_Transaction) {
-		count += write_to_buffer(buf, message->msg_transaction->end_format_time);
+	if (type == 'T' && msg->reportType == ReportType_Transaction) {
+		write_str(buf, msg->trans->end_format_time);
 	} else {
-		count += write_to_buffer(buf, message->format_time);
+		write_str(buf, msg->format_time);
 	}
 
-	count += write_to_buffer(buf, TAB);
-	count += write_to_buffer(buf, message->Type);
-	count += write_to_buffer(buf, TAB);
-	count += write_to_buffer(buf, message->Name);
-	count += write_to_buffer(buf, TAB);
+	write_str(buf, TAB);
+	write_str(buf, msg->type);
+	write_str(buf, TAB);
+	write_str(buf, msg->name);
+	write_str(buf, TAB);
 
 	if (policy != Policy_WITHOUT_STATUS) {
-		count += write_to_buffer(buf, message->Status);
-		count += write_to_buffer(buf, TAB);
+		write_str(buf, msg->status);
+		write_str(buf, TAB);
 
-		char* data = message->Data;
+		char* data = msg->data->data;
 
-		if (policy == Policy_WITH_DURATION && message->reportType == ReportType_Transaction) {
-			count += buf_write_long(buf,message->msg_transaction->duration);
+		if (policy == Policy_WITH_DURATION && msg->reportType == ReportType_Transaction) {
+			write_long(buf, msg->trans->duration);
 
-			count += write_to_buffer(buf, "us");
-			count += write_to_buffer(buf, TAB);
+			write_str(buf, "us");
+			write_str(buf, TAB);
 		}
 
-		count += write_to_buffer(buf, data);
-		count += write_to_buffer(buf, TAB);
+		write_str(buf, data);
+		write_str(buf, TAB);
 	}
 
-	count += write_to_buffer(buf, LF);
-
-	return count;
+	write_str(buf, LF);
 }
 
-int encode_message(struct cat_message* message, struct channel_buffer *buf) {
+void encode_message(struct message* msg, struct byte_buf *buf) {
 
-	if (message->reportType == ReportType_Event) {
-		int r = encode_line(message, buf, 'E', Policy_DEFAULT);
-		return r;
+	if (msg->reportType == ReportType_Event) {
+		encode_line(msg, buf, 'E', Policy_DEFAULT);
+		return;
 	}
-	if (message->reportType == ReportType_Transaction) {
-		cat_transaction *transaction_temp = message->msg_transaction;
-		int len = transaction_temp->message_children_size;
+	if (msg->reportType == ReportType_Transaction) {
+		transaction *transaction_temp = msg->trans;
+		int len = transaction_temp->children_size;
 
 		if (len == 0) {
-			return encode_line(message, buf, 'A', Policy_WITH_DURATION);
+			encode_line(msg, buf, 'A', Policy_WITH_DURATION);
+			return;
 		}
-		int count = 0;
-		count += encode_line(message, buf, 't', Policy_WITHOUT_STATUS);
+		encode_line(msg, buf, 't', Policy_WITHOUT_STATUS);
 
 		int i;
 		for (i = 0; i < len; i++) {
-			struct cat_message* child = transaction_temp->messageChildren[i];
-			count += encode_message(child, buf);
+			struct message* child = transaction_temp->children[i];
+			encode_message(child, buf);
 		}
 
-		count += encode_line(message, buf, 'T', Policy_WITH_DURATION);
-
-		return count;
+		encode_line(msg, buf, 'T', Policy_WITH_DURATION);
 	}
-	if (message->reportType == ReportType_Heartbeat) {
-		return encode_line(message, buf, 'H', Policy_DEFAULT);
+	if (msg->reportType == ReportType_Heartbeat) {
+		encode_line(msg, buf, 'H', Policy_DEFAULT);
+		return;
 	}
-	if (message->reportType == ReportType_Metric) {
-		return encode_line(message, buf, 'M', Policy_DEFAULT);
+	if (msg->reportType == ReportType_Metric) {
+		encode_line(msg, buf, 'M', Policy_DEFAULT);
+		return;
 	}
-
-	return EXCEPTION_CODE;
 }
 
-void encode(struct default_message_tree* tree, struct channel_buffer *buf) {
-
-	int count = 0;
-	buf->buffer_pointer = 4; // place-holder
-	count += encode_header(tree, buf);
-	if (tree->message != NULL) {
-		count += encode_message(tree->message, buf);
+void encode(struct g_context* context, struct byte_buf *buf) {
+	buf->ptr = 4; // place-holder
+	encode_header(context, buf);
+	if (context->msg != NULL) {
+		encode_message(context->msg, buf);
 	}
-	setint_to_buffer_begin(buf->buffer, count);
-	buf->writen_size = count + 4;
+	insert_int(buf, buf->size);
+	buf->size += 4;
 	return;
 }
 
-void set_status(struct cat_message* message, char* status){
-	message->Status = status;
+void set_status(struct message* msg, char* status) {
+	copy_string(msg->status, status, CHAR_BUFFER_SIZE);
 }
 

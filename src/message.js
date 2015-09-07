@@ -52,7 +52,7 @@ Message.prototype={
 	
 	 	}
 
-		addon.glue_add_data(this._id,keyValuePair);
+		addon.glue_add_data(this._id, keyValuePair);
 	},
 
 	/**

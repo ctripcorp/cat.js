@@ -2,7 +2,11 @@
 #include <v8.h>
 #include <string.h>
 #include <stdio.h>
-#include "ccat.h"
+
+#include "m.h"
+#include "msg.h"
+#include "manager.h"
+
 using namespace v8;
 
 char *parse_args(v8::Local<v8::Value> value);
@@ -30,8 +34,8 @@ void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*foo)(char*))
  	long ptr=args[0]->NumberValue();
  	char* status=parse_args(args[1]);
 
- 	cat_message* p= reinterpret_cast<cat_message*>(ptr);
- 	trans_complete_with_status(p, status);
+ 	message* p= reinterpret_cast<message*>(ptr);
+ 	complete_message_with_status(p, status);
 
  	args.GetReturnValue().Set(Number::New(isolate,0));
  }
@@ -53,7 +57,7 @@ void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*foo)(char*))
  	long ptr=args[0]->NumberValue();
  	char* data=parse_args(args[1]);
 
- 	cat_message* p= reinterpret_cast<cat_message*>(ptr);
+ 	message* p= reinterpret_cast<message*>(ptr);
  	add_data(p, data);
 
  	args.GetReturnValue().Set(Number::New(isolate,0));
@@ -76,7 +80,7 @@ void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*foo)(char*))
  	long ptr=args[0]->NumberValue();
  	char* status=parse_args(args[1]);
 
- 	cat_message* p= reinterpret_cast<cat_message*>(ptr);
+ 	message* p= reinterpret_cast<message*>(ptr);
  	set_status(p, status);
 
  	args.GetReturnValue().Set(Number::New(isolate,0));
@@ -93,10 +97,10 @@ void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*foo)(char*))
  	}
  	long ptr=args[0]->NumberValue();
 
- 	cat_message* p= reinterpret_cast<cat_message*>(ptr);
+ 	message* p= reinterpret_cast<message*>(ptr);
  	char* type=parse_args(args[1]);
  	char* name=parse_args(args[2]);
- 	cat_message *message = sub_transaction(type,name,p);
+ 	message *message = sub_transaction(type,name,p);
 
  	long rPtr= reinterpret_cast<long>(message);
 
@@ -123,13 +127,13 @@ void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*foo)(char*))
 
  	long ptr=args[0]->NumberValue();
 
- 	cat_message* p= reinterpret_cast<cat_message*>(ptr);
+ 	message* p= reinterpret_cast<message*>(ptr);
  	char* type=parse_args(args[1]);
  	char* name=parse_args(args[2]);
  	char* status=parse_args(args[3]);
- 	cat_message *message = sub_event(type,name,status,p);
+ 	message *msg = sub_event(type,name,status,p);
 
- 	long rPtr= reinterpret_cast<long>(message);
+ 	long rPtr= reinterpret_cast<long>(msg);
  	Local<Object> obj = Object::New(isolate);
  	obj->Set(String::NewFromUtf8(isolate, "pointer"), Number::New(isolate,rPtr));
  	args.GetReturnValue().Set(obj);
@@ -157,11 +161,52 @@ void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*foo)(char*))
  }
 
  void glue_set_domain(const FunctionCallbackInfo<Value>& args) {
- 	glue_set_inner(args,&set_domain);
+ 	Isolate* isolate = Isolate::GetCurrent();
+ 	HandleScope scope(isolate);
+
+ 	if (args.Length() != 1) {
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
+ 		return;
+ 	}
+
+ 	if(!args[0]->IsString()){
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+ 		return;
+ 	}
+
+ 	char* value=parse_args(args[0]);
+
+ 	set_domain(value);
+
+ 	args.GetReturnValue().Set(Number::New(isolate,0));
  }
 
  void glue_set_server(const FunctionCallbackInfo<Value>& args) {
- 	glue_set_inner(args,&set_server);
+ 	Isolate* isolate = Isolate::GetCurrent();
+ 	HandleScope scope(isolate);
+
+ 	if (args.Length() != 1) {
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
+ 		return;
+ 	}
+
+ 	if(!args[0]->IsArray()){
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+ 		return;
+ 	}
+
+ 	Local<Array> arr= Local<Array>::Cast(args[0]);
+ 	int len = arr->Length();
+	const char* value[4];
+
+	for(int i=0;i<len;i++){
+		Local<Value> item = arr->Get(i);
+		value[i] = parse_args(item);
+	}
+
+ 	set_server(value, len);
+
+ 	args.GetReturnValue().Set(Number::New(isolate,0));
  }
 
 /*
@@ -185,7 +230,7 @@ void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*foo)(char*))
  	char* type=parse_args(args[0]);
  	char* name=parse_args(args[1]);
 
- 	cat_message *message = new_transaction(type,name);
+ 	message *message = new_transaction(type,name);
 
  	long ptr= reinterpret_cast<long>(message);
 
@@ -222,24 +267,45 @@ void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*foo)(char*))
  	args.GetReturnValue().Set(Number::New(isolate,0)); 
  }
 
- void glue_settimeout(const FunctionCallbackInfo<Value>& args) {
+ void glue_timeout(const FunctionCallbackInfo<Value>& args) {
  	Isolate* isolate = Isolate::GetCurrent();
  	HandleScope scope(isolate);
 
- 	if (args.Length() != 2) {
+ 	if (args.Length() != 1) {
  		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
  		return;
  	}
 
- 	if(!args[0]->IsNumber() || !args[0]->IsNumber()){
+ 	if(!args[0]->IsNumber()){
  		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
  		return;
  	}
 
+
  	long ptr = args[0]->NumberValue();
- 	int sec = args[1]->NumberValue();
- 	cat_message* p= reinterpret_cast<cat_message*>(ptr);
- 	settimeout(p,sec);
+ 	message* p= reinterpret_cast<message*>(ptr);
+ 	timeout(p);
+
+	args.GetReturnValue().Set(Number::New(isolate,0)); // return 0 as success
+}
+
+ void glue_set_log_level(const FunctionCallbackInfo<Value>& args) {
+ 	Isolate* isolate = Isolate::GetCurrent();
+ 	HandleScope scope(isolate);
+
+ 	if (args.Length() != 1) {
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
+ 		return;
+ 	}
+
+ 	if(!args[0]->IsNumber()){
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+ 		return;
+ 	}
+
+
+ 	int log_level = args[0]->NumberValue();
+ 	set_debug_level(log_level);
 
 	args.GetReturnValue().Set(Number::New(isolate,0)); // return 0 as success
 }
@@ -262,7 +328,17 @@ void Init(Handle<Object> exports) {
 	NODE_SET_METHOD(exports, "glue_set_server", glue_set_server);
 	NODE_SET_METHOD(exports, "glue_new_transaction", glue_new_transaction);
 	NODE_SET_METHOD(exports, "glue_log_event", glue_log_event);
-	NODE_SET_METHOD(exports, "glue_settimeout", glue_settimeout);
+	NODE_SET_METHOD(exports, "glue_timeout", glue_timeout);
+
+	/*
+	 * LOG_FATAL    (1)
+     * LOG_ERR      (2)
+     * LOG_WARN     (3)
+     * LOG_INFO     (4)
+	 */
+	NODE_SET_METHOD(exports, "glue_set_log_level", glue_set_log_level);
+
+	main_init();
 }
 
 /*

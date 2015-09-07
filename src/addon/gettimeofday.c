@@ -1,12 +1,7 @@
 #ifdef _WIN32
-#include <time.h>
-#include <windows.h> 
 #include "gettimeofday.h"
 
-
 const __int64 DELTA_EPOCH_IN_MICROSECS = 11644473600000000;
-
-
 
 int gettimeofday(struct timeval2 *tv/*in*/, struct timezone2 *tz/*in*/)
 {
@@ -30,7 +25,6 @@ int gettimeofday(struct timeval2 *tv/*in*/, struct timezone2 *tz/*in*/)
 	tv->tv_sec = (__int32)(tmpres*0.000001);
 	tv->tv_usec = (tmpres % 1000000);
 
-
 	//_tzset(),don't work properly, so we use GetTimeZoneInformation
 	rez = GetTimeZoneInformation(&tz_winapi);
 	tz->tz_dsttime = (rez == 2) ? true : false;
@@ -40,7 +34,8 @@ int gettimeofday(struct timeval2 *tv/*in*/, struct timezone2 *tz/*in*/)
 }
 
 #endif
-/*
+
+/* usage:
 int _tmain(int argc, _TCHAR* argv[])
 {
 	struct timeval2 tv;

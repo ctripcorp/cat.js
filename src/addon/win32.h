@@ -13,11 +13,24 @@
 #include <windows.h>
 #include "gettimeofday.h"
 #define snprintf rpl_snprintf
-typedef long long  fx_long;
+typedef long long c_long;
+#define get_format_time win_get_format_time
+#define get_tv_usec win_get_tv_usec
+typedef int pthread_t;
+#include <process.h>
+#pragma  comment(lib,"ws2_32.lib")
 
 #else
 
-#endif
+#include <pthread.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
 
+typedef long c_long;
+
+#endif
 
 #endif /* SRC_ADDON_WIN32_H_ */

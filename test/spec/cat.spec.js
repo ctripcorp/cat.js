@@ -2,68 +2,32 @@ var http = require('http');
 var fs=require("fs"); 
 var cat = require("../../src/cat");
 
-function pi()
-{
-	var c = 10000000000;
-	var Pi=0;
-	var n=1;
-	for (i=0;i<=c;i++)
-	{
-		Pi=Pi+(4/n)-(4/(n+2));
-		n=n+4;
-		//console.log(Pi);
-	}
-	console.log(Pi);
-}
-
 describe("cat client suite",function(){
-	it("read file",function(){
-		var fileName='../../src/ccat.cc';
-		var t=cat.span('ReadFile',fileName);
+	it("Transaction", function(){
+		var fileName = '../../src/ccat.cc';
+		var t = cat.span('RedFile', fileName);
 		fs.readFile(fileName, function(err, data) {
 			if(err){
+				t.error(err);
 			}
-
 			t.end();
 		});	
 	});
 
-	it("log error",function(){
-		cat.error(new Error("xxx"));
-	});
-
-	it("many transaction",function(){
-		var t = cat.span("trans","root");
-		for(var i=0;i<3;i++){
-			var sub = t.span("trans","subT1");
-			pi();
-			for(var j=0;j<3;j++){
-				var sub1 = sub.span("trans","subT2");
-				pi();
-				sub1.end();
-
-				var t1 = cat.span("trans","root");
-				t1.end();
-			}
-			sub.end();
-		}
-
-		t.end();
-	});
-
-	it("pi",function(){
+	it("Sub Transaction",function(){
 		var fileName='../../src/ccat.cc';
-		var t=cat.span('ReadFile',fileName);
-		var subSpan=t.span('ReadFile',fileName);
+		var t = cat.span('ReadFile', fileName);
+		var subSpan = t.span('ReadFile', fileName);
 		fs.readFile(fileName, function(err, data) {
-			t.event("ReadFile",fileName);
+			t.event("ReadFile", fileName, "0");
 			if(err){
+				t.error(err);
 			}
-			fs.readFile(fileName, function(err, data) {
+
+			fs.readFile("not exist", function(err, data) {
 				if(err){
+					subSpan.error(err);
 				}
-				
-				pi();
 				subSpan.end();
 			});	
 			
@@ -78,82 +42,36 @@ describe("cat client suite",function(){
 			if(err){
 			}
 			setTimeout(function() {
-           		t.end();
-       		}, 20000);
+				t.end(); 
+			}, 20000);
 		});	
 	});
 
-	it("sub trans",function(){
+	xit("sub trans timeout",function(){
 		var fileName='../../src/ccat.cc';
 		var t=cat.span('ReadFile',fileName);
 		var subSpan=t.span('ReadFile',fileName);
 		fs.readFile(fileName, function(err, data) {
-			t.event("ReadFile",fileName);
+			t.event("ReadFile", fileName, "0");
 			if(err){
+				t.error(err);
 			}
 			fs.readFile(fileName, function(err, data) {
 				if(err){
+					t.error(err);
 				}
 				//setTimeout is a  mock for cost 2min to read file
 				setTimeout(function() {
-           			subSpan.end();
-       			}, 2000);
+					subSpan.end();
+				}, 8000);
 			});	
-			
 		});	
+		t.timeout(5)
 		t.end();
 	});
 
-	it("log",function(){
-		//event and error with transaction
-		var t=cat.span("Type","Name");
-		t.event("Type","Name");
-		//t.logError(err);
-		t.end();
+	xit("express",function(){
 
-		//event and error send immediately
-		cat.event("type","name");
-		cat.event("type","name","status","key1=value1&key2=value2");
-		//cat.logError(err);
-	});
-
-	it("general",function(){
-		var t=cat.span("Type","Name");
-		fs.readFile('../src/ccat.cc', function(err, data) {
-			if(err){
-				t.logError(err);
-			}
-			t.end(err);
-		});
-	});
-
-	it("fork&join",function(){
-		var t=cat.span("Type","Name");
-		for (var i = 0; i < 5; i++) {
-			ts=t.span("","");
-
-			fs.readFile('../src/ccat.cc', function(err, data) {
-				if(err){
-					logError(err);
-					ts.end();
-					return;
-				}
-				/*
-				 * if all branch have joined, t will complete self
-				 */
-				 // ts.timeout(2000)
-				 ts.end();
-				});
-
-		}
-		/*
-		 * t won't send here, it will wait all fork branch finish
-		 */
-		 t.timeout(1000);
-		 t.end();
-		});
-
-	it("express",function(){
 		var express = require('express');
 		var app = express();
 
@@ -179,7 +97,7 @@ describe("cat client suite",function(){
 			res.send('hello, world!')
 		});
 	*/
-});
+	});
 
 	it("cat express middleware like morgan",function(){
 		/*
@@ -199,7 +117,7 @@ describe("cat client suite",function(){
 	*/
 });
 
-	it("express middleware",function(){
+	xit("express middleware",function(){
 		var express = require('express');
 
 		var app = express();

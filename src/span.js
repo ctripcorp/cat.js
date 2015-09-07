@@ -69,11 +69,11 @@ var spanProto=Span.prototype;
  * var t = cat.span("Type","Name");
  * t.event("Type","Name");
  */
- spanProto.event= function(type,name,status,data){
-
- 	var event_id = addon.glue_new_event(this._id,status,type,name);
- 	var cat_event = new Message(event_id);
- 	if(arguments.length==3){
+ spanProto.event= function(type, name, status, data){
+ 	
+ 	var obj = addon.glue_new_event(this._id, type, name, status);
+ 	var cat_event = new Message(obj.pointer);
+ 	if(arguments.length == 4){
  		cat_event.addData(data);
  	}
  	return cat_event;
@@ -93,7 +93,7 @@ var spanProto=Span.prototype;
  	if(err instanceof Error){
  		var type = helper.extract_type(err);
 
- 		this.event(type,err.message,"0",err);
+ 		return this.event(type,err.message,"0",err);
  	}else{
  		throw new Error("you can't log an error which type isn't Error");
  	}
@@ -110,7 +110,14 @@ var spanProto=Span.prototype;
 * t.timeout(3000);
 */
 spanProto.timeout =function(timeout_sec){
-	addon.glue_settimeout(this._id,timeout_sec);
+	if(this._timer){
+		clearTimeout(this._timer);
+	}
+
+	var trans = this._id;
+	this._timer = setTimeout(function() {
+		addon.glue_timeout(trans);
+	}, timeout_sec * 1000);
 }
 
 module.exports=Span;

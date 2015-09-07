@@ -2,25 +2,25 @@ var http = require('http');
 var fs=require("fs"); 
 var cat = require("../../src/cat");
 
-function pi()
-{
-	var c = 100000000;
-	var Pi=0;
-	var n=1;
-	for (i=0;i<=c;i++)
-	{
-		Pi=Pi+(4/n)-(4/(n+2));
-		n=n+4;
-		//console.log(Pi);
-	}
-	console.log(Pi);
-}
-
 describe("sigle suite",function(){
-	it("add data",function(){
-		var t = cat.span("trans","root");
-		//t.event("type","name","0","stur=boy");
-
-		t.end();
-	});
+	var fileName='../../src/ccat.cc';
+	var t = cat.span('ReadFile',fileName);
+	var subSpan=t.span('ReadFile',fileName);
+	fs.readFile(fileName, function(err, data) {
+		t.event("ReadFile", fileName, "0");
+		if(err){
+			t.error(err);
+		}
+		fs.readFile(fileName, function(err, data) {
+			if(err){
+				t.error(err);
+			}
+			//setTimeout is a  mock for cost 2min to read file
+			setTimeout(function() {
+				subSpan.end();
+			}, 8000);
+		});	
+	});	
+	t.timeout(5)
+	t.end();
 });
