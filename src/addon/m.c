@@ -8,8 +8,8 @@
 #include "m.h"
 
 const int KB = 1024;
-const int BUFFER_SIZE = 64 * KB;
-const int CHAR_BUFFER_SIZE = KB * sizeof(char);
+const int BUFFER_SIZE = 64 * 1024;
+const int CHAR_BUFFER_SIZE = 1024 * sizeof(char);
 const int MB = KB * KB;
 const int MAX_TRANS_CHAILD_SIZE = 1000; /* TODO:Change to server side limit if necessary */
 const int EXCEPTION_CODE = -1;
