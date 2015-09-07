@@ -170,7 +170,6 @@ void free_transaction(message* message);
 struct message* init_event();
 void *zmalloc(const char *file, int line, int size);
 void *zrealloc(const char *file, int line, void* ptr, int size);
-void get_format_time(char** buf);
 c_long get_tv_usec();
 int c_get_threadid();
 void c_exit_thread();
@@ -181,8 +180,10 @@ int read_mark();
 void c_sleep(unsigned int sec);
 
 #ifdef _WIN32
-char* win_get_format_time();
+void win_get_format_time(char** buf);
 c_long win_get_tv_usec();
+#else
+void get_format_time(char** buf);
 #endif
 
 #endif /* SRC_ADDON_M_H_ */

@@ -14,9 +14,6 @@
 #include "gettimeofday.h"
 #define snprintf rpl_snprintf
 typedef long long c_long;
-#define get_format_time win_get_format_time
-#define get_tv_usec win_get_tv_usec
-typedef int pthread_t;
 #include <process.h>
 #pragma  comment(lib,"ws2_32.lib")
 

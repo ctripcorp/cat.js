@@ -52,10 +52,12 @@ struct byte_buf* init_buf() {
  * str		 I   NULL string will be set to 'null' and string length should less than 64*KB
  */
 void write_str(struct byte_buf* buf, const char* str) {
+	int len;
+
 	if (str == NULL)
 		str = "null";
 
-	int len = strlen(str);
+	len = strlen(str);
 
 	if (buf->ptr + len > buf->block * BUFFER_SIZE) {
 		_expand_buf(buf);
@@ -93,8 +95,10 @@ void write_char(struct byte_buf* buf, char c) {
 }
 
 void _expand_buf(struct byte_buf* buf) {
+	char* ptr;
+
 	buf->block++;
-	char* ptr = (char*) ZREALLOC(buf->buffer, buf->block * BUFFER_SIZE * (sizeof(char)));
+	ptr = (char*) ZREALLOC(buf->buffer, buf->block * BUFFER_SIZE * (sizeof(char)));
 	buf->buffer = ptr;
 }
 
@@ -192,7 +196,9 @@ void copy_nstr(char* to, const char* from){
 }
 
 struct message* init_transaction() {
-	transaction *trans = (transaction*) ZMALLOC(sizeof(transaction));
+	message* msg;
+	transaction *trans;
+	trans = (transaction*) ZMALLOC(sizeof(transaction));
 	trans->children_size = 0;
 	trans->standalone = 0;
 	trans->duration = 0;
@@ -204,27 +210,29 @@ struct message* init_transaction() {
 	trans->timeout = -1;	//-1 means timeout not set
 	trans->flush = 0;	//0 means has not flushed
 
-	message* message = init_message();
-	message->reportType = ReportType_Transaction;
-	message->trans = trans;
+	msg = init_message();
+	msg->reportType = ReportType_Transaction;
+	msg->trans = trans;
 
-	return message;
+	return msg;
 }
 
-void free_transaction(message* message) {
-	free(message->trans);
-	free(message);
+void free_transaction(message* msg) {
+	free(msg->trans);
+	free(msg);
 }
 
-void free_message(message* message) {
-	free(message->type);
-	free(message->status);
-	free(message->name);
-	free_c_string(message->data);
-	free(message);
+void free_message(message* msg) {
+	free(msg->type);
+	free(msg->status);
+	free(msg->name);
+	free_c_string(msg->data);
+	free(msg);
 }
 
 struct g_context* setup_context() {
+	int i;
+
 	g_context *context = (g_context*) ZMALLOC(sizeof(g_context));
 	init_ip(context);
 	context->domain = ZMALLOC(CHAR_BUFFER_SIZE);
@@ -241,7 +249,7 @@ struct g_context* setup_context() {
 	context->initialized = 1;
 	context->serv = ZMALLOC(sizeof(server));
 	context->serv->server =ZMALLOC(sizeof(char*)*4);
-	int i;
+
 	for(i=0;i<4;i++){
 		context->serv->server[i] = ZMALLOC(sizeof(char)* 16);
 	}
@@ -267,6 +275,9 @@ c_long zero() {
 }
 
 void get_format_time(char** buf) {
+	#ifdef _WIN32
+	return win_get_format_time(buf);
+	#endif
 	char fmt[64];
 	struct timeval tv;
 	struct tm *tm;
@@ -279,6 +290,9 @@ void get_format_time(char** buf) {
 }
 
 c_long get_tv_usec() {
+	#ifdef _WIN32
+	return win_get_tv_usec();
+	#endif
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	return tv.tv_sec * 1000000L + tv.tv_usec;
@@ -334,7 +348,8 @@ void *zmalloc(const char *file, int line, int size) {
 }
 
 void *zrealloc(const char *file, int line, void* ptr, int size) {
-	void *_ptr = realloc(ptr, size);
+	void *_ptr ;
+	_ptr = realloc(ptr, size);
 
 	if (!_ptr) {
 		LOG(LOG_FATAL,"Could not reallocate");
@@ -355,11 +370,11 @@ void mark(const char* data){
 
 int read_mark(){
    FILE *fp;
+   int i;
    char buff[255];
    fp = fopen("mark.txt", "r");
    if(fp){
 	   fgets(buff, 255, (FILE*)fp);
-	   int i;
 	   sscanf(buff, "%d", &i);
 	   fclose(fp);
 	   return i;
@@ -371,7 +386,7 @@ int read_mark(){
 }
 
 #ifdef _WIN32
-char* win_get_format_time() {
+void win_get_format_time(char** buf) {
 	/*
 	 struct timeval2 tv;
 	 struct timezone2 tz;
@@ -385,7 +400,6 @@ char* win_get_format_time() {
 
 	//TODO workaround for above solution, the precision not correct
 	char fmt[64];
-	char *buf = (char*) ZMALLOC(24 * sizeof(char));
 	time_t timer;
 	char buffer[20];
 	struct tm* tm_info;
@@ -394,16 +408,16 @@ char* win_get_format_time() {
 	tm_info = localtime(&timer);
 
 	strftime(buffer, 24, "%Y-%m-%d %H:%M:%S", tm_info);
-	strcpy(buf, buffer);
-	strcat(buf, ".000");
-	return buf;
+	strcpy(*buf, buffer);
+	strcat(*buf, ".000");
 }
 
 c_long win_get_tv_usec() {
 	struct timeval2 tv;
 	struct timezone2 tz;
+	c_long temp;
 	gettimeofday(&tv, &tz);
-	fx_long temp = tv.tv_sec * 1000000LL + tv.tv_usec;
+	temp = tv.tv_sec * 1000000LL + tv.tv_usec;
 	return temp;
 }
 #endif

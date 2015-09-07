@@ -10,6 +10,9 @@
 
 #ifdef _WIN32
 
+#include <time.h>
+#include <windows.h> 
+
 #ifndef __cplusplus
 
 typedef unsigned char bool;

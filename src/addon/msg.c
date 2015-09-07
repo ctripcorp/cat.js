@@ -73,10 +73,12 @@ void do_join(struct message* msg) {
 }
 
 void timeout(struct message* msg) {
+	transaction *ptr_trans;
+
 	if (msg->completed == 1)
 		return; /* message already completed */
 
-	transaction *ptr_trans = msg->trans;
+	ptr_trans = msg->trans;
 
 	copy_string(msg->status, "TIMEOUT", CHAR_BUFFER_SIZE);
 
@@ -90,13 +92,15 @@ void timeout(struct message* msg) {
 }
 
 void set_trans_completed(struct message* msg) {
+	c_long current;
+
 	msg->completed = 1;
 	get_format_time(&buf_ptr);
 	strncpy(msg->trans->end_format_time, small_buf, 24);
 
 	LOG(LOG_INFO, "-- Transaction[%p] complete at time:%s", msg, msg->trans->end_format_time);
 
-	c_long current = get_tv_usec();
+	current = get_tv_usec();
 	msg->trans->endtime = current;
 	msg->trans->duration = current - msg->timestamp;
 }
@@ -137,13 +141,15 @@ void message_flush(struct message* msg) {
 
 void* do_send(void *arg) {
 	struct message* msg = arg;
+	int i;
+	struct byte_buf *buf ;
 	add_message(msg);
-	struct byte_buf *buf = init_buf();
+	buf = init_buf();
 	encode(context, buf);
 
 	/* print raw message data */
 	LOG1(LOG_INFO, "[INFO]Raw Text:\n");
-	int i;
+
 	for (i = 0; i < buf->ptr; i++) {
 		LOG1(LOG_INFO, "%c", buf->buffer[i]);
 	}
@@ -317,7 +323,7 @@ void encode_header(struct g_context* context, struct byte_buf *buf) {
 
 void insert_int(struct byte_buf *buf, int value) {
 	int len = 4, i = 0;
-	char bytes[len];
+	char bytes[4];
 
 	convert_int(bytes, value);
 	do {
@@ -326,6 +332,7 @@ void insert_int(struct byte_buf *buf, int value) {
 }
 
 void encode_line(struct message* msg, struct byte_buf *buf, char type, enum policy policy) {
+	char* data;
 	write_char(buf, type);
 
 	if (type == 'T' && msg->reportType == ReportType_Transaction) {
@@ -344,7 +351,7 @@ void encode_line(struct message* msg, struct byte_buf *buf, char type, enum poli
 		write_str(buf, msg->status);
 		write_str(buf, TAB);
 
-		char* data = msg->data->data;
+		data = msg->data->data;
 
 		if (policy == Policy_WITH_DURATION && msg->reportType == ReportType_Transaction) {
 			write_long(buf, msg->trans->duration);
@@ -361,6 +368,7 @@ void encode_line(struct message* msg, struct byte_buf *buf, char type, enum poli
 }
 
 void encode_message(struct message* msg, struct byte_buf *buf) {
+	int i;
 
 	if (msg->reportType == ReportType_Event) {
 		encode_line(msg, buf, 'E', Policy_DEFAULT);
@@ -376,7 +384,6 @@ void encode_message(struct message* msg, struct byte_buf *buf) {
 		}
 		encode_line(msg, buf, 't', Policy_WITHOUT_STATUS);
 
-		int i;
 		for (i = 0; i < len; i++) {
 			struct message* child = transaction_temp->children[i];
 			encode_message(child, buf);

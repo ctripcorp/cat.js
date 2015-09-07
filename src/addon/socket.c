@@ -6,7 +6,9 @@
  */
 
 #include "socket.h"
-
+#ifdef _WIN32
+#pragma  comment(lib,"ws2_32.lib")
+#endif
 const int cat_port = 2280;
 
 void socket_send(char* buf, int sendsize) {
@@ -21,27 +23,30 @@ void socket_send(char* buf, int sendsize) {
 #ifdef _WIN32
 
 SOCKET win_client() {
-	int i;
+	int i, err;
+	struct sockaddr_in serAddr;
+	WSADATA data;
+	SOCKET sclient;
+
 	for (i = 0; i < context->serv->len; i++) {
 		WORD sockVersion = MAKEWORD(2, 2);
-		WSADATA data;
+
 		if (WSAStartup(sockVersion, &data) != 0)
 		{
 			return NULL;
 		}
 
-		SOCKET sclient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		sclient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (sclient == INVALID_SOCKET)
 		{
 			LOG(LOG_ERR, "invalid socket !");
 			return NULL;
 		}
 
-		struct sockaddr_in serAddr;
 		serAddr.sin_family = AF_INET;
-		serAddr.sin_port = htons(cat_config.port);
+		serAddr.sin_port = htons(cat_port);
 		serAddr.sin_addr.S_un.S_addr = inet_addr(context->serv->server[i]);
-		int err = connect(sclient, (struct sockaddr *)&serAddr, sizeof(serAddr));
+		err = connect(sclient, (struct sockaddr *)&serAddr, sizeof(serAddr));
 		if(err == SOCKET_ERROR)
 		{
 			LOG(LOG_ERR,"connect error, error code:%d", err);
@@ -53,8 +58,8 @@ SOCKET win_client() {
 }
 
 void win_send(char* buf, int sendsize) {
-
-	SOCKET sclient = win_client();
+	SOCKET sclient;
+	sclient = win_client();
 
 	send(sclient, buf, sendsize, 0);
 
@@ -63,17 +68,17 @@ void win_send(char* buf, int sendsize) {
 }
 
 void init_ip(struct g_context *context) {
-
+	int namelen, err;
 	SOCKET sclient = win_client();
-
+	unsigned char *ip;
 	struct sockaddr_in name;
-	int namelen = sizeof(name);
-	int err = getsockname(sclient, (struct sockaddr*) &name, &namelen);
+	namelen = sizeof(name);
+	err = getsockname(sclient, (struct sockaddr*) &name, &namelen);
 	if (err) {
 		LOG(LOG_ERR,"connect error, error code:%d", err);
 	}
 
-	unsigned char *ip = (unsigned char *)&name.sin_addr.s_addr;
+	ip = (unsigned char *)&name.sin_addr.s_addr;
 	sprintf(&context->local_ip_hex[0], "%02x%02x%02x%02x", ip[0], ip[1], ip[2], ip[3]);
 	copy_string(context->local_ip, inet_ntoa(name.sin_addr), CHAR_BUFFER_SIZE);
 	closesocket(sclient);
@@ -82,7 +87,7 @@ void init_ip(struct g_context *context) {
 #else
 void linux_send(char* buf, int sendsize) {
 	int sock_cli;
-	int i, j = 0;
+	int i, j = 0, err, r;
 	for (i = 0; i < context->serv->len; i++) {
 		sock_cli = socket(AF_INET, SOCK_STREAM, 0);
 		struct sockaddr_in servaddr;
@@ -92,7 +97,7 @@ void linux_send(char* buf, int sendsize) {
 
 		servaddr.sin_addr.s_addr = inet_addr(context->serv->server[i]);
 
-		int err = connect(sock_cli, (const struct sockaddr*) &servaddr, sizeof(servaddr));
+		err = connect(sock_cli, (const struct sockaddr*) &servaddr, sizeof(servaddr));
 		if (err) {
 			LOG(LOG_ERR, "connect %s error, error code:%d", context->serv->server[i], err);
 		} else {
@@ -103,7 +108,7 @@ void linux_send(char* buf, int sendsize) {
 	if (!j)	/* fail to connect server */
 		return;
 
-	int r = send(sock_cli, buf, sendsize, 0);
+	r = send(sock_cli, buf, sendsize, 0);
 	if (r == -1) {
 		LOG(LOG_FATAL, "fail to send");
 	} else {
@@ -123,9 +128,9 @@ void linux_send(char* buf, int sendsize) {
  */
 void init_ip(struct g_context *context) {
 	struct sockaddr_in serv;
-	int err = -1;
-
-	int sock = socket(AF_INET, SOCK_DGRAM, 0);
+	int err = -1, sock;
+	char* ptr_local_ip;
+	sock = socket(AF_INET, SOCK_DGRAM, 0);
 
 	if (sock < 0) {
 		LOG(LOG_ERR, "socket error");
@@ -150,7 +155,7 @@ void init_ip(struct g_context *context) {
 		LOG(LOG_ERR, "connect error, error code:%d", err);
 	}
 
-	char* ptr_local_ip = inet_ntoa(serv.sin_addr);
+	ptr_local_ip = inet_ntoa(serv.sin_addr);
 
 	LOG(LOG_INFO, "Local Address: %08x (%s)", serv.sin_addr.s_addr, ptr_local_ip);
 

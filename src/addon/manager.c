@@ -23,10 +23,12 @@ void set_domain(char* domain) {
 }
 
 void set_server(const char* server[], int len) {
+
+	int i;
+
 	if (len > 4)
 		len = 4;
 
-	int i;
 	for (i = 0; i < len; i++) {
 		strncpy(context->serv->server[i], server[i], strlen(server[i]));
 	}
@@ -40,12 +42,14 @@ void set_debug_level(int level) {
 
 void next_message_id(char** buffer) {
 	char* buf = *buffer;
-	c_long x = get_tv_usec();
+	char foo[30];
+	c_long x, timestamp;
+	x = get_tv_usec();
 
 #ifdef _WIN32
-	c_long timestamp = x / 3600000000LL;
+	timestamp = x / 3600000000LL;
 #else
-	c_long timestamp = x / 3600000000L;
+	timestamp = x / 3600000000L;
 #endif
 
 	context->msg_index++;
@@ -54,8 +58,6 @@ void next_message_id(char** buffer) {
 	strcat(buf, SPLIT);
 	strncat(buf, context->local_ip_hex, 8);
 	strcat(buf, SPLIT);
-
-	char foo[30];
 
 #ifdef _WIN32
 	sprintf(foo, "%lld", timestamp);
