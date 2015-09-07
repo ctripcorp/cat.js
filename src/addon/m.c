@@ -10,7 +10,7 @@
 const int KB = 1024;
 const int BUFFER_SIZE = 64 * 1024;
 const int CHAR_BUFFER_SIZE = 1024 * sizeof(char);
-const int MB = KB * KB;
+const int MB = 1024 * 1024;
 const int MAX_TRANS_CHAILD_SIZE = 1000; /* TODO:Change to server side limit if necessary */
 const int EXCEPTION_CODE = -1;
 const int SUCCESS_CODE = 1;
@@ -28,7 +28,7 @@ const char SPLIT[] = "-";
 const char CAT_NULL[] = "null";
 const char DEFAULT_DOMAIN[] = "nodejs";
 
-char small_buf[BUFFER_SIZE];
+char small_buf[64*1024];
 char *buf_ptr = small_buf;
 g_context *context;
 
