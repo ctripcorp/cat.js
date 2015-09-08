@@ -106,7 +106,7 @@ struct c_string {
 };
 
 struct server{
-	char **server;
+	char **address;
 	int len;
 };
 

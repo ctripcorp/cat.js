@@ -22,7 +22,7 @@ void set_domain(char* domain) {
 	copy_nstr(context->domain, domain);
 }
 
-void set_server(const char* server[], int len) {
+void set_server(const char* serv[], int len) {
 
 	int i;
 
@@ -30,7 +30,7 @@ void set_server(const char* server[], int len) {
 		len = 4;
 
 	for (i = 0; i < len; i++) {
-		strncpy(context->serv->server[i], server[i], strlen(server[i]));
+		strncpy(context->serv->address[i], serv[i], strlen(serv[i]));
 	}
 
 	context->serv->len = len;

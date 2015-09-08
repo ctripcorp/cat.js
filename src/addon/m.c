@@ -248,12 +248,12 @@ struct g_context* setup_context() {
 	context->msg_index = read_mark();
 	context->initialized = 1;
 	context->serv = ZMALLOC(sizeof(server));
-	context->serv->server =ZMALLOC(sizeof(char*)*4);
+	context->serv->address =ZMALLOC(sizeof(char*)*4);
 
 	for(i=0;i<4;i++){
-		context->serv->server[i] = ZMALLOC(sizeof(char)* 16);
+		context->serv->address[i] = ZMALLOC(sizeof(char)* 16);
 	}
-	copy_string(context->serv->server[0], "0.0.0.0", 16);
+	copy_string(context->serv->address[0], "0.0.0.0", 16);
 	context->serv->len = 1;
 
 	return context;
@@ -275,12 +275,13 @@ c_long zero() {
 }
 
 void get_format_time(char** buf) {
-	#ifdef _WIN32
-	return win_get_format_time(buf);
-	#endif
 	char fmt[64];
 	struct timeval tv;
 	struct tm *tm;
+
+	#ifdef _WIN32
+	return win_get_format_time(buf);
+	#endif
 
 	gettimeofday(&tv, NULL);
 	if ((tm = localtime(&tv.tv_sec)) != NULL) {
@@ -290,10 +291,12 @@ void get_format_time(char** buf) {
 }
 
 c_long get_tv_usec() {
+	struct timeval tv;
+
 	#ifdef _WIN32
 	return win_get_tv_usec();
 	#endif
-	struct timeval tv;
+
 	gettimeofday(&tv, NULL);
 	return tv.tv_sec * 1000000L + tv.tv_usec;
 }

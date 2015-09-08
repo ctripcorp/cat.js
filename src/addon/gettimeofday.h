@@ -15,9 +15,9 @@
 
 #ifndef __cplusplus
 
-typedef unsigned char bool;
-const bool false = 0;
-const bool true = 1;
+typedef int bool;
+#define true 1
+#define false 0
 
 #endif
 

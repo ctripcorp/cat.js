@@ -14,6 +14,7 @@
 #include "gettimeofday.h"
 #define snprintf rpl_snprintf
 typedef long long c_long;
+typedef int pthread_t;
 #include <process.h>
 #pragma  comment(lib,"ws2_32.lib")
 

@@ -45,7 +45,7 @@ SOCKET win_client() {
 
 		serAddr.sin_family = AF_INET;
 		serAddr.sin_port = htons(cat_port);
-		serAddr.sin_addr.S_un.S_addr = inet_addr(context->serv->server[i]);
+		serAddr.sin_addr.S_un.S_addr = inet_addr(context->serv->address[i]);
 		err = connect(sclient, (struct sockaddr *)&serAddr, sizeof(serAddr));
 		if(err == SOCKET_ERROR)
 		{
@@ -99,7 +99,7 @@ void linux_send(char* buf, int sendsize) {
 
 		err = connect(sock_cli, (const struct sockaddr*) &servaddr, sizeof(servaddr));
 		if (err) {
-			LOG(LOG_ERR, "connect %s error, error code:%d", context->serv->server[i], err);
+			LOG(LOG_ERR, "connect %s error, error code:%d", context->serv->address[i], err);
 		} else {
 			j = 1;
 			break;
