@@ -95,7 +95,7 @@ void linux_send(char* buf, int sendsize) {
 		servaddr.sin_family = AF_INET;
 		servaddr.sin_port = htons(cat_port);
 
-		servaddr.sin_addr.s_addr = inet_addr(context->serv->server[i]);
+		servaddr.sin_addr.s_addr = inet_addr(context->serv->address[i]);
 
 		err = connect(sock_cli, (const struct sockaddr*) &servaddr, sizeof(servaddr));
 		if (err) {
