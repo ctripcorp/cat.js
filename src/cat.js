@@ -102,7 +102,7 @@ Cat.prototype={
 	 },
 
 	/**
-	 * @api {function call} event(type,name,status[,key[,value[, ... ]]]) event
+	 * @api {function call} event(type,name,status[,key[,value[,...]]]) event
 	 * @apiName event
 	 * @apiGroup Cat
 	 * @apiDescription create an event and send immediatelly

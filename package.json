@@ -1,5 +1,5 @@
 {
-  "name": "catjs",
+  "name": "cat-js",
   "version": "0.1.0",
   "description": "cat node client",
   "main": "src/cat.js",

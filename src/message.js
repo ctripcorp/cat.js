@@ -28,7 +28,7 @@ Message.prototype={
 	},
 
 	/**
-	 * @api {function call} addData(key[,value[, ... ]]) addData
+	 * @api {function call} addData(key[,value[,...]]) addData
 	 * @apiName addData
 	 * @apiGroup Message
 	 * @apiParam {String} key 如果没有传value，key是一个健值对，例如：“name=stur”
