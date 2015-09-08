@@ -14,7 +14,7 @@ const int MB = 1024 * 1024;
 const int MAX_TRANS_CHAILD_SIZE = 1000; /* TODO:Change to server side limit if necessary */
 const int EXCEPTION_CODE = -1;
 const int SUCCESS_CODE = 1;
-int  debug_level = 2;
+int debug_level = 2;
 FILE *dbgstream;
 
 /*
@@ -28,7 +28,7 @@ const char SPLIT[] = "-";
 const char CAT_NULL[] = "null";
 const char DEFAULT_DOMAIN[] = "nodejs";
 
-char small_buf[64*1024];
+char small_buf[64 * 1024];
 char *buf_ptr = small_buf;
 g_context *context;
 
@@ -78,12 +78,14 @@ void write_int(struct byte_buf* buf, int i) {
 	 */
 
 	char foo[30];
+	foo[0] = '\0';
 	sprintf(foo, "%d", i);
 	write_str(buf, foo);
 }
 
 void write_long(struct byte_buf* buf, c_long l) {
 	char foo[30];
+	foo[0] = '\0';
 	sprintf(foo, "%ld", l);
 	write_str(buf, foo);
 }
@@ -147,51 +149,51 @@ void copy_string(char* to, const char* from, size_t limit) {
 	if (len > limit) {
 		to = (char*) ZREALLOC(to, (len + 1) * sizeof(char));
 	}
-	strncpy(to, from, len);
+	strncpy(to, from, len + 1);
 }
 
-struct c_string* init_c_string(){
+struct c_string* init_c_string() {
 	c_string *str = (c_string*) ZMALLOC(sizeof(c_string));
 	str->block = 1;
 	str->data = (char*) ZMALLOC(BUFFER_SIZE * sizeof(char));
 	return str;
 }
 
-void _expand_c_string(struct c_string *str, int purpose){
+void _expand_c_string(struct c_string *str, int purpose) {
 	int limit = BUFFER_SIZE * str->block;
-	do{
+	do {
 		str->block++;
 		limit = BUFFER_SIZE * str->block;
-	}while(limit < purpose);
+	} while (limit < purpose);
 
 	str->data = (char*) ZREALLOC(str->data, str->block * BUFFER_SIZE * sizeof(char));
 }
 
-void set_c_string(struct c_string *str, const char *data){
+void set_c_string(struct c_string *str, const char *data) {
 	int limit = BUFFER_SIZE * str->block;
 	int len = strlen(data);
-	if(len > limit){
+	if (len > limit) {
 		_expand_c_string(str, len);
 	}
 	copy_string(str->data, data, limit);
 }
 
-void cat_c_string(struct c_string *str, const char *data){
+void cat_c_string(struct c_string *str, const char *data) {
 	int limit = BUFFER_SIZE * str->block;
 	int len = strlen(data);
-	if(len > limit){
+	if (len > limit) {
 		_expand_c_string(str, len);
 	}
 
 	strcat(str->data, data);
 }
 
-void free_c_string(struct c_string *str){
+void free_c_string(struct c_string *str) {
 	free(str->data);
 	free(str);
 }
 
-void copy_nstr(char* to, const char* from){
+void copy_nstr(char* to, const char* from) {
 	copy_string(to, from, CHAR_BUFFER_SIZE);
 }
 
@@ -243,15 +245,15 @@ struct g_context* setup_context() {
 	context->msg = NULL;
 	gethostname(context->hostname, 1024);
 
-	LOG(LOG_INFO,"host name:%s",context->hostname);
+	LOG(LOG_INFO, "host name:%s", context->hostname);
 
 	context->msg_index = read_mark();
 	context->initialized = 1;
 	context->serv = ZMALLOC(sizeof(server));
-	context->serv->address =ZMALLOC(sizeof(char*)*4);
+	context->serv->address = ZMALLOC(sizeof(char*) * 4);
 
-	for(i=0;i<4;i++){
-		context->serv->address[i] = ZMALLOC(sizeof(char)* 16);
+	for (i = 0; i < 4; i++) {
+		context->serv->address[i] = ZMALLOC(sizeof(char) * 16);
 	}
 	copy_string(context->serv->address[0], "0.0.0.0", 16);
 	context->serv->len = 1;
@@ -279,9 +281,9 @@ void get_format_time(char** buf) {
 	struct timeval tv;
 	struct tm *tm;
 
-	#ifdef _WIN32
+#ifdef _WIN32
 	return win_get_format_time(buf);
-	#endif
+#endif
 
 	gettimeofday(&tv, NULL);
 	if ((tm = localtime(&tv.tv_sec)) != NULL) {
@@ -293,9 +295,9 @@ void get_format_time(char** buf) {
 c_long get_tv_usec() {
 	struct timeval tv;
 
-	#ifdef _WIN32
+#ifdef _WIN32
 	return win_get_tv_usec();
-	#endif
+#endif
 
 	gettimeofday(&tv, NULL);
 	return tv.tv_sec * 1000000L + tv.tv_usec;
@@ -330,7 +332,7 @@ void c_exit_thread() {
 }
 
 /* sleep by seconds */
-void c_sleep(unsigned int sec){
+void c_sleep(unsigned int sec) {
 #ifdef _WIN32
 	Sleep(sec * 1000);
 #else
@@ -342,7 +344,7 @@ void *zmalloc(const char *file, int line, int size) {
 	void *ptr = malloc(size);
 
 	if (!ptr) {
-		LOG(LOG_FATAL,"Could not allocate");
+		LOG(LOG_FATAL, "Could not allocate");
 		//TODO this may exit main thread, so do something left and disable logging
 		exit(1);
 	}
@@ -351,11 +353,11 @@ void *zmalloc(const char *file, int line, int size) {
 }
 
 void *zrealloc(const char *file, int line, void* ptr, int size) {
-	void *_ptr ;
+	void *_ptr;
 	_ptr = realloc(ptr, size);
 
 	if (!_ptr) {
-		LOG(LOG_FATAL,"Could not reallocate");
+		LOG(LOG_FATAL, "Could not reallocate");
 		//TODO this may exit main thread, so do something left and disable logging
 		exit(1);
 	}
@@ -363,29 +365,29 @@ void *zrealloc(const char *file, int line, void* ptr, int size) {
 	return (_ptr);
 }
 
-void mark(const char* data){
-   FILE *fp;
+void mark(const char* data) {
+	FILE *fp;
 
-   fp = fopen("mark.txt", "w+");
-   fprintf(fp, "%s", data);
-   fclose(fp);
+	fp = fopen("mark.txt", "w+");
+	fprintf(fp, "%s", data);
+	fclose(fp);
 }
 
-int read_mark(){
-   FILE *fp;
-   int i;
-   char buff[255];
-   fp = fopen("mark.txt", "r");
-   if(fp){
-	   fgets(buff, 255, (FILE*)fp);
-	   sscanf(buff, "%d", &i);
-	   fclose(fp);
-	   return i;
-   }
+int read_mark() {
+	FILE *fp;
+	int i;
+	char buff[255];
+	fp = fopen("mark.txt", "r");
+	if (fp) {
+		fgets(buff, 255, (FILE*) fp);
+		sscanf(buff, "%d", &i);
+		fclose(fp);
+		return i;
+	}
 
-   LOG(LOG_WARN,"fail to read mark");
+	LOG(LOG_WARN, "fail to read mark");
 
-   return 0;
+	return 0;
 }
 
 #ifdef _WIN32
