@@ -262,7 +262,7 @@ struct g_context* setup_context() {
 		strcpy(hostname, "Unknown_Host_Name");
 	}
 #else
-	gethostname(Name, 150);
+	gethostname(hostname, 150);
 #endif
 	strncpy(context->hostname, hostname, 150);
 
