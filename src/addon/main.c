@@ -21,7 +21,7 @@ void test_scenario_multi_message();
 int main(void) {
 
 	/* Replace this function to test specified function */
-	test_scenario_multi_message();
+	test_scenario_trans();
 
 #ifdef _WIN32
 	system("pause");
@@ -42,7 +42,7 @@ void test_scenario_trans(){
 	const char* server[2] = {"10.2.25.213","22.22.22.22"};
 	set_server(server,2);
 
-	set_domain("cat-nodejs");
+	set_domain("winnode");
 
 	message *root = new_transaction("Addon", "Trans");
 

@@ -234,6 +234,9 @@ void free_message(message* msg) {
 
 struct g_context* setup_context() {
 	int i;
+	char hostname[1024];
+	char Name[150];
+	hostname[1023] = '\0';
 
 	g_context *context = (g_context*) ZMALLOC(sizeof(g_context));
 	init_ip(context);
@@ -243,7 +246,35 @@ struct g_context* setup_context() {
 	context->hostname = ZMALLOC(CHAR_BUFFER_SIZE);
 	context->msg_id = ZMALLOC(CHAR_BUFFER_SIZE);
 	context->msg = NULL;
-	gethostname(context->hostname, 1024);
+
+#ifdef WIN32
+	TCHAR infoBuf[150];
+	DWORD bufCharCount = 150;
+	memset(Name, 0, 150);
+	if (GetComputerName(infoBuf, &bufCharCount))
+	{
+		for (i = 0; i<150; i++)
+		{
+			Name[i] = infoBuf[i];
+		}
+	}
+	else
+	{
+		strcpy(Name, "Unknown_Host_Name");
+	}
+#else
+	memset(Name, 0, 150);
+	gethostname(Name, 150);
+#endif
+	strncpy(context->hostname, Name, 150);
+
+	/* friendly hostname
+	gethostname(hostname, 1023);
+	printf("Hostname: %s\n", hostname);
+	struct hostent* h;
+	h = gethostbyname(hostname);
+	printf("h_name: %s\n", h->h_name);
+	*/
 
 	LOG(LOG_INFO, "host name:%s", context->hostname);
 
@@ -341,7 +372,10 @@ void c_sleep(unsigned int sec) {
 }
 
 void *zmalloc(const char *file, int line, int size) {
-	void *ptr = malloc(size);
+	void *ptr;
+
+	ptr = malloc(size);
+	memset(ptr, 0, size);
 
 	if (!ptr) {
 		LOG(LOG_FATAL, "Could not allocate");

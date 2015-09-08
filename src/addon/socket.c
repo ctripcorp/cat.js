@@ -26,9 +26,10 @@ SOCKET win_client() {
 	struct sockaddr_in serAddr;
 	WSADATA data;
 	SOCKET sclient;
+	WORD sockVersion;
 
 	for (i = 0; i < context->serv->len; i++) {
-		WORD sockVersion = MAKEWORD(2, 2);
+		sockVersion = MAKEWORD(2, 2);
 
 		if (WSAStartup(sockVersion, &data) != 0)
 		{
@@ -68,18 +69,44 @@ void win_send(char* buf, int sendsize) {
 
 void init_ip(struct g_context *context) {
 	int namelen, err;
-	SOCKET sclient = win_client();
+	SOCKET sclient;
 	unsigned char *ip;
-	struct sockaddr_in name;
-	namelen = sizeof(name);
-	err = getsockname(sclient, (struct sockaddr*) &name, &namelen);
+	struct sockaddr_in serAddr;
+	WSADATA data;
+	WORD sockVersion;
+
+	sockVersion = MAKEWORD(2, 2);
+
+	if (WSAStartup(sockVersion, &data) != 0)
+	{
+		return NULL;
+	}
+
+	sclient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (sclient == INVALID_SOCKET)
+	{
+		LOG(LOG_ERR, "invalid socket !");
+		return NULL;
+	}
+
+	serAddr.sin_family = AF_INET;
+	serAddr.sin_port = htons(53);
+	serAddr.sin_addr.S_un.S_addr = inet_addr("8.8.8.8");
+	err = connect(sclient, (struct sockaddr *)&serAddr, sizeof(serAddr));
+	if (err == SOCKET_ERROR)
+	{
+		LOG(LOG_ERR, "connect error, error code:%d", err);
+	}
+
+	namelen = sizeof(serAddr);
+	err = getsockname(sclient, (struct sockaddr*) &serAddr, &namelen);
 	if (err) {
 		LOG(LOG_ERR,"connect error, error code:%d", err);
 	}
 
-	ip = (unsigned char *)&name.sin_addr.s_addr;
+	ip = (unsigned char *)&serAddr.sin_addr.s_addr;
 	sprintf(&context->local_ip_hex[0], "%02x%02x%02x%02x", ip[0], ip[1], ip[2], ip[3]);
-	copy_string(context->local_ip, inet_ntoa(name.sin_addr), CHAR_BUFFER_SIZE);
+	copy_string(context->local_ip, inet_ntoa(serAddr.sin_addr), CHAR_BUFFER_SIZE);
 	closesocket(sclient);
 	WSACleanup();
 }
@@ -129,6 +156,7 @@ void init_ip(struct g_context *context) {
 	struct sockaddr_in serv;
 	int err = -1, sock;
 	char* ptr_local_ip;
+
 	sock = socket(AF_INET, SOCK_DGRAM, 0);
 
 	if (sock < 0) {

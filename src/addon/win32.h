@@ -11,6 +11,7 @@
 #ifdef _WIN32
 
 #include <windows.h>
+#include <tchar.h>
 #include "gettimeofday.h"
 #define snprintf rpl_snprintf
 typedef long long c_long;
