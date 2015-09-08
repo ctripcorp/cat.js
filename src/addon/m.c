@@ -234,9 +234,8 @@ void free_message(message* msg) {
 
 struct g_context* setup_context() {
 	int i;
-	char hostname[1024];
-	char Name[150];
-	hostname[1023] = '\0';
+	char hostname[150];
+	memset(hostname, 0, 150);
 
 	g_context *context = (g_context*) ZMALLOC(sizeof(g_context));
 	init_ip(context);
@@ -250,23 +249,22 @@ struct g_context* setup_context() {
 #ifdef WIN32
 	TCHAR infoBuf[150];
 	DWORD bufCharCount = 150;
-	memset(Name, 0, 150);
+
 	if (GetComputerName(infoBuf, &bufCharCount))
 	{
 		for (i = 0; i<150; i++)
 		{
-			Name[i] = infoBuf[i];
+			hostname[i] = infoBuf[i];
 		}
 	}
 	else
 	{
-		strcpy(Name, "Unknown_Host_Name");
+		strcpy(hostname, "Unknown_Host_Name");
 	}
 #else
-	memset(Name, 0, 150);
 	gethostname(Name, 150);
 #endif
-	strncpy(context->hostname, Name, 150);
+	strncpy(context->hostname, hostname, 150);
 
 	/* friendly hostname
 	gethostname(hostname, 1023);
