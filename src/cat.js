@@ -4,21 +4,6 @@ var appConfig=require(path.resolve(__dirname,'./appConfig.js'));
 var Span=require('./span');
 var helper = require('./helper.js');
 
-/**
- * @api {constructor} Cat([optoin]) constructor
- * @apiName Cat
- * @apiGroup Cat
- * @apiDescription create a root span in express middleware, and auto complete on request finish
- * @apiParam {String} option, always 'combined' 
- * @apiExample {curl} Example usage:
- * var express = require('express');
- * var app = express();
- * //自动在请求的结束埋点，
- * var t = cat.span('type','name')
- *		app.use(t('combined')); *	app.get('/', function (req, res) {
- *		res.send('hello, world!')
- *	});
-*/
 function Cat(option) {
 	this._initConfig();
 
@@ -95,7 +80,7 @@ Cat.prototype={
 	 	if (appConfig['timeout']){
 	 		span.timeout(appConfig['timeout']);
 	 	}else{
-	 		span.timeout(10);
+	 		span.timeout(30);
 	 	}
 
 	 	return span;
@@ -149,8 +134,32 @@ Cat.prototype={
 	 	}else{
 	 		throw new Error("you can't log an error which type isn't <Error>");
 	 	}
+	 },
+
+	/**
+	 * @api {function} http(server) http
+	 * @apiName http
+	 * @apiGroup Cat
+	 * @apiDescription create a root span on http request start, and auto complete on request finish
+	 * @apiParam {object} server
+	 * @apiExample {curl} Example usage:
+	 * var http = require('http');
+     * var server = http.createServer(function (request, response) {
+  	 * 		response.writeHead(200, {'Content-Type': 'text/plain'});
+  	 * 		response.end('Hello World\n');
+     * }).listen(8888);
+     * cat.http(server);
+	 */
+	 http : function(server){
+	 	var _cat = this;
+	 	server.on("request",function(req, res){
+	 		var _root = _cat.span("URL",req.url);
+	 		res.on("finish",function(){
+	 			_root.end();
+	 		});
+	 	});
 	 }
 }
 
-module.exports=new Cat();
+module.exports = new Cat();
 

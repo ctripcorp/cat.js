@@ -74,7 +74,7 @@ void write_int(struct byte_buf* buf, int i) {
 	 char* number_buf = ZMALLOC(n*sizeof(char));
 	 snprintf(number_buf, n, "%d", i);
 	 write_str(buf, number_buf);
-	 free(number_buf);
+	 ZFREE(number_buf);
 	 */
 
 	char foo[30];
@@ -105,8 +105,8 @@ void _expand_buf(struct byte_buf* buf) {
 }
 
 void free_buf(struct byte_buf* buf) {
-	free(buf->buffer);
-	free(buf);
+	ZFREE(buf->buffer);
+	ZFREE(buf);
 	buf = NULL;
 }
 
@@ -189,8 +189,8 @@ void cat_c_string(struct c_string *str, const char *data) {
 }
 
 void free_c_string(struct c_string *str) {
-	free(str->data);
-	free(str);
+	ZFREE(str->data);
+	ZFREE(str);
 }
 
 void copy_nstr(char* to, const char* from) {
@@ -208,9 +208,10 @@ struct message* init_transaction() {
 	trans->docomplete = 0;
 	trans->endtime = zero();
 	memset(trans->end_format_time, 0, 24);
-	trans->is_root = 0;	//0 means this is not root
-	trans->timeout = -1;	//-1 means timeout not set
-	trans->flush = 0;	//0 means has not flushed
+	trans->is_root = 0;	// 0 means this is not root
+	trans->timeout = -1;	// -1 means timeout not set
+	trans->flush = 0;	// 0 means has not flushed
+	trans->has_timeout = 0; // 0 means timeout not set
 
 	msg = init_message();
 	msg->reportType = ReportType_Transaction;
@@ -220,16 +221,16 @@ struct message* init_transaction() {
 }
 
 void free_transaction(message* msg) {
-	free(msg->trans);
-	free(msg);
+	ZFREE(msg->trans);
+	ZFREE(msg);
 }
 
 void free_message(message* msg) {
-	free(msg->type);
-	free(msg->status);
-	free(msg->name);
+	ZFREE(msg->type);
+	ZFREE(msg->status);
+	ZFREE(msg->name);
 	free_c_string(msg->data);
-	free(msg);
+	ZFREE(msg);
 }
 
 struct g_context* setup_context() {
@@ -291,10 +292,10 @@ struct g_context* setup_context() {
 }
 
 void free_context(struct g_context* context) {
-	free(context->msg_id);
-	free(context->hostname);
-	free(context->domain);
-	free(context);
+	ZFREE(context->msg_id);
+	ZFREE(context->hostname);
+	ZFREE(context->domain);
+	ZFREE(context);
 }
 
 c_long zero() {
@@ -382,6 +383,10 @@ void *zmalloc(const char *file, int line, int size) {
 	}
 
 	return (ptr);
+}
+
+void zfree(void* ptr){
+	free(ptr);
 }
 
 void *zrealloc(const char *file, int line, void* ptr, int size) {

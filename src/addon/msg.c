@@ -85,10 +85,15 @@ void timeout(struct message* msg) {
 	if (ptr_trans->is_root == 1) { /* message is root transaction */
 		set_trans_completed(msg);
 		message_flush(msg);
+		free_trans(msg);
 	} else {
 		set_trans_completed(msg);
 		do_join(msg);
 	}
+}
+
+void settimeout(struct message* msg) {
+	msg->trans->has_timeout = 1;
 }
 
 void set_trans_completed(struct message* msg) {
@@ -107,42 +112,16 @@ void set_trans_completed(struct message* msg) {
 
 void message_flush(struct message* msg) {
 	do_send(msg);
-#if 0 //TODO resolve thread issue
-#ifdef _WIN32
-	do_send(message);
-	/*
-	 int val = 0;
-	 HANDLE handle;
-	 handle = (HANDLE)_beginthread(do_send, 0, &val); // create thread
-	 WaitForSingleObject(handle, INFINITE);
-	 */
-#else
-	pthread_t tid;
-	int err;
-	err = pthread_create(&tid, NULL, &do_send, message);
-	if (err != 0)
-	printf("\ncan't create thread :[%s]", strerror(err));
-
-	void* status;
-	pthread_join(tid, &status);
-#endif
-
-	//TODO free may not corrent
-	/*
-	 while (1){
-	 message* temp = pop();
-	 if (temp == NULL)
-	 break;
-	 else
-	 free_tree(message);
-	 }*/
-#endif
+	msg->trans->flush = 1;
+	if (msg->trans->is_root && !msg->trans->has_timeout) {
+		free_trans(msg);
+	}
 }
 
 void* do_send(void *arg) {
 	struct message* msg = arg;
 	int i;
-	struct byte_buf *buf ;
+	struct byte_buf *buf;
 	add_message(msg);
 	buf = init_buf();
 	encode(context, buf);
@@ -186,48 +165,21 @@ message* new_transaction(char* type, char* name) {
 	return root_trans;
 }
 
-#if 0
-void cancel_timeout(struct message* message) {
+void free_trans(struct message* t) {
+	int i;
 
-#ifdef _WIN32
-	//TODO
-#else
-	pthread_cancel(message->trans->tid);
-#endif
+	if (t->reportType == ReportType_Event) {
+		free_message(t);
+		return;
+	}
 
-	message->trans->flush = 0;
-
+	if (t->reportType == ReportType_Transaction) {
+		for (i = 0; i < t->trans->children_size; i++) {
+			free_trans(t->trans->children[i]);
+		}
+		free_transaction(t);
+	}
 }
-
-void settimeout(struct message* message, int sec) {
-	message->trans->timeout = sec;
-	if ((int) message->trans->flush == 1)
-	cancel_timeout(message);
-#ifdef _WIN32
-	int val = 0;
-	HANDLE handle;
-	handle = (HANDLE)_beginthread(do_send, 0, &val); // create thread
-	WaitForSingleObject(handle, INFINITE);
-
-	message->trans->flush = 1;
-#else
-	int err;
-	err = pthread_create(&message->trans->tid, NULL, &do_timeout, message);
-	if (err != 0)
-	printf("\ncan't create thread :[%s]", strerror(err));
-	else
-	message->trans->flush = 1;
-#endif
-}
-
-void* do_timeout(void *arg) {
-	struct message* message = arg;
-	csleep(message->trans->timeout);
-	timeout(message);
-	c_exit_thread();
-	return NULL;
-}
-#endif
 
 message* sub_transaction(char* type, char* name, struct message *parent) {
 	message *msg = init_transaction();
@@ -238,14 +190,14 @@ message* sub_transaction(char* type, char* name, struct message *parent) {
 	get_format_time(&buf_ptr);
 	strncpy(msg->format_time, small_buf, 24);
 
-	LOG(LOG_INFO,"transaction create time:%s",msg->format_time);
+	LOG(LOG_INFO, "transaction create time:%s", msg->format_time);
 
 	msg->timestamp = get_tv_usec();
 
 #ifdef _WIN32
 	LOG(LOG_INFO,"transaction timestamp:%lld",msg->timestamp);
 #else
-	LOG(LOG_INFO,"transaction timestamp:%ld",msg->timestamp);
+	LOG(LOG_INFO, "transaction timestamp:%ld", msg->timestamp);
 #endif
 
 	msg->trans_parent = parent;

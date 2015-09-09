@@ -18,11 +18,12 @@ extern void complete_message_with_status(struct message* msg, char* status);
 void complete_message(struct message* msg);
 void complete_event(struct message* evt);
 void complete_trans(struct message* msg);
-void set_trans_completed(struct message* message);
-
+void set_trans_completed(struct message*);
+void free_trans(struct message* trans);
 void do_join(struct message* msg);
 extern void timeout(struct message* msg);
-void message_flush(struct message* message);
+extern void settimeout(struct message*);
+void message_flush(struct message*);
 void* do_send(void *arg);
 extern message* new_transaction(char* type, char* name);
 extern message* sub_transaction(char* type, char* name, struct message *parent);

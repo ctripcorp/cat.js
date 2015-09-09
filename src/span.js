@@ -118,6 +118,8 @@ spanProto.timeout =function(timeout_sec){
 	this._timer = setTimeout(function() {
 		addon.glue_timeout(trans);
 	}, timeout_sec * 1000);
+	
+	addon.glue_settimeout(trans);
 }
 
 module.exports=Span;

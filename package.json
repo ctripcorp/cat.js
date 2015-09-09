@@ -1,5 +1,5 @@
 {
-  "name": "cat-js",
+  "name": "cat-nodejs",
   "version": "0.1.0",
   "description": "cat node client",
   "main": "src/cat.js",
@@ -9,7 +9,7 @@
     "title": "cat node client document"
   },
   "scripts": {
-    "test": "jasmine-node --matchAll --captureExceptions test/spec/cat.singleentry.js"
+    "test": "jasmine-node test/spec/cat.spec.js"
   },
   "dependencies": {
     "bindings": "^1.2.1"

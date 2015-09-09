@@ -16,6 +16,7 @@
 
 #define ZMALLOC(theSize) zmalloc(__FILE__, __LINE__, theSize)
 #define ZREALLOC(ptr, theSize) zrealloc(__FILE__, __LINE__, ptr, theSize)
+#define ZFREE(ptr) zfree(ptr)
 
 #define LOG_FATAL    (1)
 #define LOG_ERR      (2)
@@ -136,14 +137,15 @@ struct transaction {
 	int timeout; /* timeout in seconds, -1 = Not Set */
 	pthread_t tid; /* -1 = Not Set */
 	int flush; /* 1 = flushed */
+	int has_timeout; /* flag to set if root trans has timeout, 1 = has set timeout */
 };
 
 /* reusable buffer */
 extern char small_buf[];
 extern char *buf_ptr;
 
-/* global context */
-extern g_context *context;
+
+extern g_context *context;	/* global context */
 extern void init_ip(struct g_context *context);
 
 struct c_string* init_c_string();
@@ -170,6 +172,7 @@ void free_transaction(message* message);
 struct message* init_event();
 void *zmalloc(const char *file, int line, int size);
 void *zrealloc(const char *file, int line, void* ptr, int size);
+void zfree(void* ptr);
 c_long get_tv_usec();
 int c_get_threadid();
 void c_exit_thread();

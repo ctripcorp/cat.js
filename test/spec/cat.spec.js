@@ -3,20 +3,23 @@ var fs=require("fs");
 var cat = require("../../src/cat");
 
 describe("cat client suite",function(){
-	it("Transaction", function(){
+	jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
+
+	it("Transaction", function(done){
 		var fileName = '../../src/ccat.cc';
-		var t = cat.span('RedFile', fileName);
+		var t = cat.span('Transaction', fileName);
 		fs.readFile(fileName, function(err, data) {
 			if(err){
 				t.error(err);
 			}
 			t.end();
+			done();
 		});	
 	});
 
-	it("Sub Transaction",function(){
+	it("Sub Transaction",function(done){
 		var fileName='../../src/ccat.cc';
-		var t = cat.span('ReadFile', fileName);
+		var t = cat.span('SubTransaction', fileName);
 		var subSpan = t.span('ReadFile', fileName);
 		fs.readFile(fileName, function(err, data) {
 			t.event("ReadFile", fileName, "0");
@@ -29,20 +32,22 @@ describe("cat client suite",function(){
 					subSpan.error(err);
 				}
 				subSpan.end();
+				done();
 			});	
 			
 		});	
 		t.end();
 	});
 
-	it("timeout",function(){
+	it("timeout",function(done){
 		var fileName='../../src/ccat.cc';
-		var t=cat.span('ReadFile',fileName);
+		var t=cat.span('Timeout',fileName);
 		fs.readFile(fileName, function(err, data) {
 			if(err){
 			}
 			setTimeout(function() {
 				t.end(); 
+				done();
 			}, 20000);
 		});	
 	});
@@ -69,136 +74,5 @@ describe("cat client suite",function(){
 		t.timeout(5)
 		t.end();
 	});
-
-	xit("express",function(){
-
-		var express = require('express');
-		var app = express();
-
-		app.get('/', function (req, res) {
-			var t=cat.span("Express","Name");
-			res.send('Hello World!');
-			t.end();
-		});
-
-
-	});
-
-	it("cat express middleware",function(){
-		/*
-		var express = require('express');
-		var app = express();
-		
-		//自动在请求的结束埋点，
-		var rootTS = cat.span('type','name')
-		app.use(rootTS('combined'));
-
-		app.get('/', function (req, res) {
-			res.send('hello, world!')
-		});
-	*/
-	});
-
-	it("cat express middleware like morgan",function(){
-		/*
-		var express = require('express');
-		var app = express();
-		
-		//自动在请求的开始和结束埋点
-		app.use(cat('combined',"type","name"));
-
-		app.get('/', function (req, res) {
-			res.send('hello, world!')
-		});
-
-		app.post("/", function(req, res){
-	
-		});
-	*/
-});
-
-	xit("express middleware",function(){
-		var express = require('express');
-
-		var app = express();
-		app.use(function(req, res, next) {
-			console.log('%s %s', req.method, req.url);
-			next();
-		});
-
-		app.get('/', function(req, res, next) {
-			console.log("enter");
-			res.send('Hello World!');
-			console.log("finish");
-		});
-
-		app.get('/help', function(req, res, next) {
-			res.send('Nope.. nothing to see here');
-		});
-
-		var server = app.listen(3000, function () {
-			var host = server.address().address;
-			var port = server.address().port;
-
-			console.log('Example app listening at http://%s:%s', host, port);
-		});
-	});
-});
-
-describe("comment",function(){
-/*
-	xit("console time",function(){
-		var i;
-		console.time("dbsave");
-
-		for(i = 1; i < LIMIT; i++){
-			db.users.save({id : i, name : "MongoUser [" + i + "]"}, end);
-		}
-
-		end = function(err, saved) {
-			console.log(( err || !saved )?"Error":"Saved");
-			if(--i === 1){console.timeEnd("dbsave");}
-		};
-	});
-
-
-	xit("Send Test",function(){
-		cat.NewTransaction("static","tt");
-	});
-
-	it("Transaction",function(){
-		
-	});
-
-	xit("Log Event",function(){
-		expect("success").toEqual(cat.LogEvent("aaa","bbb"));
-	});
-
-	xit("Init Domain",function(){
-		cat.InitWithDomain("stur");
-		expect("success").toEqual(cat.NewTransaction("aaa","bbb"));
-	});
-
-	xit("HTTP Request",function(){
-		var count = 0;
-		http.createServer(function (request, response) {
-			response.writeHead(200, {'Content-Type': 'text/plain'});
-			response.end((++count).toString())
-		}).listen(8124);
-		console.log('Server running at http://127.0.0.1:8124/');
-	});
-
-	xit("Permormance",function(){
-		var start = Date.now();//获取当前时间戳
-		setTimeout(function () {
-			console.log(Date.now() - start);
-	    	for (var i = 0; i < 1000000000; i++){//执行长循环
-	    	}
-	    }, 1000);
-		setTimeout(function () {
-			console.log(Date.now() - start);
-		}, 2000);	
-	});
-*/
 
 });

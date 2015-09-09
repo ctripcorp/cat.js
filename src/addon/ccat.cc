@@ -289,6 +289,28 @@ void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*foo)(char*))
 	args.GetReturnValue().Set(Number::New(isolate,0)); // return 0 as success
 }
 
+ void glue_settimeout(const FunctionCallbackInfo<Value>& args) {
+ 	Isolate* isolate = Isolate::GetCurrent();
+ 	HandleScope scope(isolate);
+
+ 	if (args.Length() != 1) {
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
+ 		return;
+ 	}
+
+ 	if(!args[0]->IsNumber()){
+ 		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments type")));
+ 		return;
+ 	}
+
+
+ 	long ptr = args[0]->NumberValue();
+ 	message* p= reinterpret_cast<message*>(ptr);
+ 	settimeout(p);
+
+	args.GetReturnValue().Set(Number::New(isolate,0)); // return 0 as success
+}
+
  void glue_set_log_level(const FunctionCallbackInfo<Value>& args) {
  	Isolate* isolate = Isolate::GetCurrent();
  	HandleScope scope(isolate);
@@ -329,6 +351,7 @@ void Init(Handle<Object> exports) {
 	NODE_SET_METHOD(exports, "glue_new_transaction", glue_new_transaction);
 	NODE_SET_METHOD(exports, "glue_log_event", glue_log_event);
 	NODE_SET_METHOD(exports, "glue_timeout", glue_timeout);
+	NODE_SET_METHOD(exports, "glue_settimeout", glue_settimeout);
 
 	/*
 	 * LOG_FATAL    (1)
