@@ -12,6 +12,7 @@
 const int cat_port = 2280;
 
 void socket_send(char* buf, int sendsize) {
+	if(context->send_on != 1) return;
 #ifdef _WIN32
 	win_send(buf,sendsize);
 #else

@@ -40,6 +40,10 @@ void set_debug_level(int level) {
 	debug_level = level;
 }
 
+void toggle_send(int flag){
+	context->send_on = flag;
+}
+
 void next_message_id(char** buffer) {
 	char* buf = *buffer;
 	char foo[30];

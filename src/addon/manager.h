@@ -23,6 +23,7 @@ extern void set_server(const char* server[], int len);
 extern void main_init();
 extern void main_free();
 extern void set_debug_level(int level);
+extern void toggle_send(int flag);
 
 #ifdef __cplusplus
 }

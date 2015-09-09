@@ -53,6 +53,7 @@ extern const int MB;
 extern const int MAX_TRANS_CHAILD_SIZE;
 extern const int EXCEPTION_CODE;
 extern const int SUCCESS_CODE;
+extern const char TIMEOUT[];
 
 /*
  * cat message protocol field
@@ -92,6 +93,7 @@ typedef struct g_context {
 	char *hostname;
 	message *msg;
 	char *msg_id;
+	int send_on; /* if send log to cat server, 1 = send */
 } g_context;
 
 struct byte_buf {

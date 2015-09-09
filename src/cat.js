@@ -6,58 +6,20 @@ var helper = require('./helper.js');
 
 function Cat(option) {
 	this._initConfig();
-
-	/* use for express 自动埋点
-	if(arguments[0]=='combined'){
-		var rootTS = addon.glue_new_transaction("type",name);
-		return log(req,res,next){
-			req.on('socket',function(){
-				rootTS.complete();
-			});
-		};
-	}
-	*/
 }
 
 Cat.prototype={
 
 	_initConfig : function(){
-		if (appConfig['domain']){
-			addon.glue_set_domain(appConfig['domain']);
-		}else{
-			addon.glue_set_domain("catjs");
-		}
 
-		if (appConfig['server']){
-			addon.glue_set_server(appConfig['server']);
-		}else{
-			addon.glue_set_server(["127.0.0.1"]);
-		}
+		var _domain = appConfig['domain'] || "catjs";
+		addon.glue_set_domain(_domain);
 
-		if (appConfig['log_level']){
-			addon.glue_set_log_level(appConfig['log_level']);
-		}else{
-			addon.glue_set_log_level(1);
-		}
+		var _server = appConfig['server'] || ["127.0.0.1"];
+		addon.glue_set_server(_server);
 
-		/* TODO:free memory on exit
-		process.stdin.resume();//so the program will not close instantly
-
-		function exitHandler(options, err) {
-		    if (options.cleanup) console.log('clean');
-		    if (err) console.log(err.stack);
-		    if (options.exit) process.exit();
-		}
-
-		//do something when app is closing
-		process.on('exit', exitHandler.bind(null,{cleanup:true}));
-
-		//catches ctrl+c event
-		process.on('SIGINT', exitHandler.bind(null, {exit:true}));
-
-		//catches uncaught exceptions
-		process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
-		*/
+		var _level = appConfig['log_level'] || 1;
+		addon.glue_set_log_level(_level);
 	},
 
 	/**

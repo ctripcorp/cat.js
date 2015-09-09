@@ -23,6 +23,8 @@ void free_trans(struct message* trans);
 void do_join(struct message* msg);
 extern void timeout(struct message* msg);
 extern void settimeout(struct message*);
+void timeout_tree(struct message* msg);
+void flush_tree(struct message* msg);
 void message_flush(struct message*);
 void* do_send(void *arg);
 extern message* new_transaction(char* type, char* name);

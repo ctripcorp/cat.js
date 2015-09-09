@@ -3,6 +3,7 @@ var debug=true;
 
 function Message(message_id){
 	this._id = message_id;
+	this._end = 0;
 }
 
 Message.prototype={
@@ -18,13 +19,15 @@ Message.prototype={
 	 * message.end(err);
 	 */
 	end : function(status){
-
+		if(this._end) return;
 		/*
 		 * if status not defined, set to "0" as success
 		 */
 		if(!arguments[0]) status = "0";
 	
-		return addon.glue_complete(this._id,status);
+		addon.glue_complete(this._id,status);
+
+		this._end = 1;
 	},
 
 	/**
@@ -38,6 +41,8 @@ Message.prototype={
 	 * message.addData("stur","boy","coco","girl");
 	 */
 	addData : function(key,value){
+		if(this._end) return;
+
 	 	var keyValuePair;
 	 	if(arguments.length==1){
 	 		keyValuePair=key.toString();
@@ -64,6 +69,8 @@ Message.prototype={
 	 * message.setStatus("ERROR");
 	 */
 	setStatus : function(status){
+		if(this._end) return;
+		
 		addon.glue_set_status(this._id,status);
 	}
 }

@@ -14,6 +14,7 @@ const int MB = 1024 * 1024;
 const int MAX_TRANS_CHAILD_SIZE = 1000; /* TODO:Change to server side limit if necessary */
 const int EXCEPTION_CODE = -1;
 const int SUCCESS_CODE = 1;
+const char TIMEOUT[] = "TIMEOUT";
 int debug_level = 2;
 FILE *dbgstream;
 
@@ -200,6 +201,7 @@ void copy_nstr(char* to, const char* from) {
 struct message* init_transaction() {
 	message* msg;
 	transaction *trans;
+
 	trans = (transaction*) ZMALLOC(sizeof(transaction));
 	trans->children_size = 0;
 	trans->standalone = 0;
@@ -222,7 +224,7 @@ struct message* init_transaction() {
 
 void free_transaction(message* msg) {
 	ZFREE(msg->trans);
-	ZFREE(msg);
+	free_message(msg);
 }
 
 void free_message(message* msg) {
@@ -289,6 +291,8 @@ struct g_context* setup_context() {
 	}
 	copy_string(context->serv->address[0], "0.0.0.0", 16);
 	context->serv->len = 1;
+
+	context->send_on = 1;
 
 	return context;
 }

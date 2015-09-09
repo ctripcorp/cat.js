@@ -52,12 +52,12 @@ describe("cat client suite",function(){
 		});	
 	});
 
-	xit("sub trans timeout",function(){
+	it("sub trans timeout",function(done){
 		var fileName='../../src/ccat.cc';
 		var t=cat.span('ReadFile',fileName);
 		var subSpan=t.span('ReadFile',fileName);
 		fs.readFile(fileName, function(err, data) {
-			t.event("ReadFile", fileName, "0");
+			t.event("ReadFile", fileName, "0", "filedata");
 			if(err){
 				t.error(err);
 			}
@@ -65,14 +65,43 @@ describe("cat client suite",function(){
 				if(err){
 					t.error(err);
 				}
-				//setTimeout is a  mock for cost 2min to read file
+				//force root timeout before sub finish
 				setTimeout(function() {
 					subSpan.end();
+					done();
 				}, 8000);
 			});	
 		});	
-		t.timeout(5)
+		t.timeout(5);
 		t.end();
 	});
 
+});
+
+xdescribe("standalone suite",function(){
+	it("sub trans timeout",function(done){
+		var fileName='../../src/ccat.cc';
+		var t=cat.span('Root',fileName);
+		var subSpan=t.span('SubTransaction',fileName);
+		fs.readFile(fileName, function(err, data) {
+			t.event("ReadFile", fileName, "0", "filedata");
+			if(err){
+				t.error(err);
+			}
+
+			fs.readFile(fileName, function(err, data) {
+				if(err){
+					t.error(err);
+				}
+
+				//force root timeout before sub finish
+				setTimeout(function() {
+					subSpan.end();
+					done();
+				}, 8000);
+			});	
+		});	
+		t.timeout(5);
+		t.end();
+	});
 });

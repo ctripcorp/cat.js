@@ -48,6 +48,7 @@ var spanProto=Span.prototype;
  * var t_sub=t.span("Type","Name");
  */
  spanProto.span= function(type,name){
+ 	if(this._end) return;
 
  	var obj=addon.glue_subTransaction(this._id,type,name);
 
@@ -70,7 +71,8 @@ var spanProto=Span.prototype;
  * t.event("Type","Name");
  */
  spanProto.event= function(type, name, status, data){
- 	
+ 	if(this._end) return;
+
  	var obj = addon.glue_new_event(this._id, type, name, status);
  	var cat_event = new Message(obj.pointer);
  	if(arguments.length == 4){
@@ -90,6 +92,8 @@ var spanProto=Span.prototype;
  * t.error(new Error("error message"));
  */
  spanProto.error= function(err){
+ 	if(this._end) return;
+
  	if(err instanceof Error){
  		var type = helper.extract_type(err);
 
@@ -110,6 +114,8 @@ var spanProto=Span.prototype;
 * t.timeout(3);
 */
 spanProto.timeout =function(timeout_sec){
+	if(this._end) return;
+	
 	if(this._timer){
 		clearTimeout(this._timer);
 	}

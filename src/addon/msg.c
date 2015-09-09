@@ -34,8 +34,17 @@ void complete_trans(struct message* msg) {
 
 	ptr_trans->docomplete = 1; /* transaction has explicit call completed */
 
-	if (msg->completed == 1)
+	if (msg->completed == 1){
+
+		if(msg->trans->flush == 1){
+			/* transaction has flushed but not free
+			 * this is usually root timeout and flush, and this is a sub trans of root
+			 */
+			free_transaction(msg);
+		}
+
 		return; /* message already completed */
+	}
 
 	if (ptr_trans->is_root == 1) { /* message is root transaction */
 
@@ -80,16 +89,37 @@ void timeout(struct message* msg) {
 
 	ptr_trans = msg->trans;
 
-	copy_string(msg->status, "TIMEOUT", CHAR_BUFFER_SIZE);
+	timeout_tree(msg);
 
 	if (ptr_trans->is_root == 1) { /* message is root transaction */
-		set_trans_completed(msg);
 		message_flush(msg);
 		free_trans(msg);
 	} else {
-		set_trans_completed(msg);
 		do_join(msg);
 	}
+}
+
+void timeout_tree(struct message* msg){
+	int i;
+	for(i=0;i<msg->trans->children_size;i++){
+		if(msg->completed != 1){
+			if(msg->trans->children[i]->reportType == ReportType_Transaction){
+				timeout_tree(msg->trans->children[i]);
+			}
+		}
+	}
+	copy_nstr(msg->status, TIMEOUT);
+	set_trans_completed(msg);
+}
+
+void flush_tree(struct message* msg){
+	int i;
+	for(i=0;i<msg->trans->children_size;i++){
+		if(msg->trans->children[i]->reportType == ReportType_Transaction){
+			flush_tree(msg->trans->children[i]);
+		}
+	}
+	msg->trans->flush = 1;
 }
 
 void settimeout(struct message* msg) {
@@ -112,7 +142,7 @@ void set_trans_completed(struct message* msg) {
 
 void message_flush(struct message* msg) {
 	do_send(msg);
-	msg->trans->flush = 1;
+	flush_tree(msg);
 	if (msg->trans->is_root && !msg->trans->has_timeout) {
 		free_trans(msg);
 	}
@@ -177,7 +207,11 @@ void free_trans(struct message* t) {
 		for (i = 0; i < t->trans->children_size; i++) {
 			free_trans(t->trans->children[i]);
 		}
-		free_transaction(t);
+
+		if(t->trans->docomplete == 1){
+
+			free_transaction(t);
+		}
 	}
 }
 
