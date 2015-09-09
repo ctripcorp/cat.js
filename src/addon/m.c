@@ -427,6 +427,10 @@ int read_mark() {
 	return 0;
 }
 
+void z_printf(const char* template, ...){
+
+}
+
 #ifdef _WIN32
 void win_get_format_time(char** buf) {
 	/*

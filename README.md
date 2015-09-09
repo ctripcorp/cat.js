@@ -12,6 +12,9 @@
 
 npm install cat-nodejs --registry=http://npm.dev.sh.ctripcorp.com:8001
 
+## API Document
+
+http://192.168.83.32:8080/catjsdoc/
 
 ## Usage
 

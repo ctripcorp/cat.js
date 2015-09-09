@@ -181,6 +181,7 @@ void copy_nstr(char* to, const char* from);
 void mark(const char*);
 int read_mark();
 void c_sleep(unsigned int sec);
+void z_printf(const char* template, ...);
 
 #ifdef _WIN32
 void win_get_format_time(char** buf);
