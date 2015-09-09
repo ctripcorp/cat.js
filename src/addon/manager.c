@@ -43,8 +43,9 @@ void set_debug_level(int level) {
 void next_message_id(char** buffer) {
 	char* buf = *buffer;
 	char foo[30];
-	foo[0] = '\0';
 	c_long x, timestamp;
+
+	foo[0] = '\0';
 	x = get_tv_usec();
 
 #ifdef _WIN32

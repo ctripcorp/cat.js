@@ -237,8 +237,13 @@ struct g_context* setup_context() {
 	int i;
 	char hostname[150];
 	memset(hostname, 0, 150);
+	g_context *context;
+#ifdef WIN32
+	TCHAR infoBuf[150];
+	DWORD bufCharCount = 150;
+#endif
 
-	g_context *context = (g_context*) ZMALLOC(sizeof(g_context));
+	context = (g_context*) ZMALLOC(sizeof(g_context));
 	init_ip(context);
 	context->domain = ZMALLOC(CHAR_BUFFER_SIZE);
 	copy_string(context->domain, &DEFAULT_DOMAIN[0], CHAR_BUFFER_SIZE);
@@ -248,9 +253,6 @@ struct g_context* setup_context() {
 	context->msg = NULL;
 
 #ifdef WIN32
-	TCHAR infoBuf[150];
-	DWORD bufCharCount = 150;
-
 	if (GetComputerName(infoBuf, &bufCharCount))
 	{
 		for (i = 0; i<150; i++)
