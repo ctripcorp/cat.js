@@ -236,13 +236,13 @@ void free_message(message* msg) {
 struct g_context* setup_context() {
 	int i;
 	char hostname[150];
-	memset(hostname, 0, 150);
 	g_context *context;
 #ifdef WIN32
 	TCHAR infoBuf[150];
 	DWORD bufCharCount = 150;
 #endif
 
+	memset(hostname, 0, 150);
 	context = (g_context*) ZMALLOC(sizeof(g_context));
 	init_ip(context);
 	context->domain = ZMALLOC(CHAR_BUFFER_SIZE);
