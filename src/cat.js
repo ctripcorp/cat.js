@@ -11,7 +11,7 @@ function Cat(option) {
 Cat.prototype={
 
 	_initConfig : function(){
-
+		
 		var _domain = appConfig['domain'] || "catjs";
 		addon.glue_set_domain(_domain);
 
@@ -20,6 +20,9 @@ Cat.prototype={
 
 		var _level = appConfig['log_level'] || 1;
 		addon.glue_set_log_level(_level);
+
+		var _enable = appConfig['enable'] || 1;
+		addon.glue_disable(_enable);
 	},
 
 	/**
@@ -80,11 +83,11 @@ Cat.prototype={
 	 },
 
 	/**
-	 * @api {function call} error(error) error
+	 * @api {function call} error(err) error
 	 * @apiName error
 	 * @apiGroup Cat
 	 * @apiDescription create an error and send immediatelly
-	 * @apiParam {String} error
+	 * @apiParam {String} err
 	 * @apiExample {curl} Example usage:
 	 * cat.error(new Error("error message"));
 	 */
@@ -99,7 +102,7 @@ Cat.prototype={
 	 },
 
 	/**
-	 * @api {function} http(server) http
+	 * @api {function call} http(server) http
 	 * @apiName http
 	 * @apiGroup Cat
 	 * @apiDescription create a root span on http request start, and auto complete on request finish

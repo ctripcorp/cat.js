@@ -45,6 +45,7 @@
 
 extern FILE *dbgstream;
 extern int  debug_level;
+extern unsigned long mem_used; /* how much dynamic memory used */
 
 extern const int KB;
 extern const int BUFFER_SIZE;
@@ -94,6 +95,7 @@ typedef struct g_context {
 	message *msg;
 	char *msg_id;
 	int send_on; /* if send log to cat server, 1 = send */
+	int mem_monitor_on; /* if send memory metric */
 } g_context;
 
 struct byte_buf {

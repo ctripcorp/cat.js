@@ -135,7 +135,14 @@ void linux_send(char* buf, int sendsize) {
 	if (!j)	/* fail to connect server */
 		return;
 
+	get_format_time(&buf_ptr);
+	LOG(LOG_WARN,"SOKCET START TIME:%s",buf_ptr);
+
 	r = send(sock_cli, buf, sendsize, 0);
+
+	get_format_time(&buf_ptr);
+	LOG(LOG_WARN,"SOCKET END TIME:%s",buf_ptr);
+
 	if (r == -1) {
 		LOG(LOG_FATAL, "fail to send");
 	} else {

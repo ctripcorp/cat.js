@@ -17,12 +17,13 @@ void test_mark();
 void test_new_event();
 void test_scenario_trans();
 void test_scenario_multi_message();
+void test_large_trans();
+void test_scenario_trans_error();
 
 int main(void) {
 
 	/* Replace this function to test specified function */
-	test_scenario_trans();
-
+	test_scenario_trans_error();
 #ifdef _WIN32
 	system("pause");
 #endif
@@ -63,6 +64,37 @@ void test_scenario_trans(){
 	main_free();
 }
 
+void test_scenario_trans_error(){
+
+	set_debug_level(4);
+
+	main_init();
+
+	/* uat: "10.2.25.213" */
+	const char* server[2] = {"10.2.25.213","22.22.22.22"};
+	set_server(server,2);
+
+	set_domain("winnode");
+
+	message *root = new_transaction("Addon", "Trans");
+
+	c_sleep(1); // do some business
+
+	message *sub_trans = sub_transaction("Addon", "SubTrans", root);
+
+	c_sleep(1); // do some business
+
+	message *evt = sub_event("Addon", "Event", "0", sub_trans);
+	add_data(evt, "author=ctrip");
+	add_data(evt, "sex=boy");
+
+	complete_message_with_status(sub_trans,"error");
+
+	complete_message_with_status(root,"root error");
+
+	main_free();
+}
+
 void test_scenario_multi_message(){
 
 	set_debug_level(4);
@@ -84,6 +116,49 @@ void test_scenario_multi_message(){
 	c_sleep(1); // do some business
 
 	complete_message_with_status(standalone,"0");
+
+	complete_message_with_status(root,"0");
+
+	main_free();
+}
+
+void test_large_trans(){
+	set_debug_level(3);
+
+	main_init();
+
+	/* uat: "10.2.25.213" */
+	const char* server[2] = {"10.2.25.213","22.22.22.22"};
+	set_server(server,2);
+
+	set_domain("345");
+
+	message *root = new_transaction("Root", "Trans");
+
+	for(int i=0;i<100;i++){
+
+		message *sub_trans = sub_transaction("Addon", "SubTrans", root);
+
+		message *evt = sub_event("Addon", "Event", "0", sub_trans);
+		add_data(evt, "author=ctrip&aa=bb&cc=dd");
+		add_data(evt, "sex=boy");
+
+		for(int i=0;i<100;i++){
+
+			message *sub_trans_inner = sub_transaction("Addon", "SubTrans", sub_trans);
+
+			message *evt_inner = sub_event("Addon", "Event", "0", sub_trans_inner);
+			add_data(evt_inner, "author=ctrip&aa=bb&cc=dd");
+			add_data(evt_inner, "sex=boy");
+
+			complete_message_with_status(sub_trans_inner,"0");
+		}
+
+		complete_message_with_status(sub_trans,"0");
+
+		LOG(LOG_WARN,"MEMORY:%lu MB",mem_used/1024/1024/8);
+		LOG(LOG_WARN,"--I:%d",i);
+	}
 
 	complete_message_with_status(root,"0");
 

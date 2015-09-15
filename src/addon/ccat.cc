@@ -15,12 +15,15 @@ void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*foo)(char*))
 int checkAndGetInteger(Isolate* isolate, v8::Local<v8::Value> value);
 long checkAndGetLong(Isolate* isolate, v8::Local<v8::Value> value);
 char* checkAndGetString(Isolate* isolate, v8::Local<v8::Value> value);
+static int isLogging;
 
 /*
  * args[0] <Number> pointer of transaction to complete
  * args[1] <String> transaction status
  */
  void glue_complete(const FunctionCallbackInfo<Value>& args) {
+ 	if(isLogging == 0)return;
+
  	Isolate* isolate = prepareIsolate(args, 2);
 
  	long ptr = checkAndGetLong(isolate, args[0]);
@@ -33,6 +36,8 @@ char* checkAndGetString(Isolate* isolate, v8::Local<v8::Value> value);
  }
 
  void glue_add_data(const FunctionCallbackInfo<Value>& args) {
+ 	if(isLogging == 0)return;
+
  	Isolate* isolate = prepareIsolate(args, 2);
 
  	long ptr = checkAndGetLong(isolate, args[0]);
@@ -45,6 +50,8 @@ char* checkAndGetString(Isolate* isolate, v8::Local<v8::Value> value);
  }
 
  void glue_set_status(const FunctionCallbackInfo<Value>& args) {
+ 	if(isLogging == 0)return;
+
  	Isolate* isolate = prepareIsolate(args, 2);
 
  	long ptr = checkAndGetLong(isolate, args[0]);
@@ -57,6 +64,8 @@ char* checkAndGetString(Isolate* isolate, v8::Local<v8::Value> value);
  }
 
  void glue_subTransaction(const FunctionCallbackInfo<Value>& args) {
+ 	if(isLogging == 0)return;
+
  	Isolate* isolate = prepareIsolate(args, 3);
  	long ptr = checkAndGetLong(isolate, args[0]);
 
@@ -74,6 +83,8 @@ char* checkAndGetString(Isolate* isolate, v8::Local<v8::Value> value);
  }
 
  void glue_new_event(const FunctionCallbackInfo<Value>& args) {
+ 	if(isLogging == 0)return;
+
  	Isolate* isolate = prepareIsolate(args, 4);
 
  	long ptr = checkAndGetLong(isolate, args[0]);
@@ -91,6 +102,8 @@ char* checkAndGetString(Isolate* isolate, v8::Local<v8::Value> value);
  }
 
  void glue_set_inner(const FunctionCallbackInfo<Value>& args, void (*foo)(char*)){
+ 	if(isLogging == 0)return;
+
  	Isolate* isolate = prepareIsolate(args, 1);
 
  	char* value = checkAndGetString(isolate, args[0]);
@@ -101,6 +114,8 @@ char* checkAndGetString(Isolate* isolate, v8::Local<v8::Value> value);
  }
 
  void glue_set_domain(const FunctionCallbackInfo<Value>& args) {
+ 	if(isLogging == 0)return;
+
  	Isolate* isolate = prepareIsolate(args, 1);
 
  	char* value = checkAndGetString(isolate, args[0]);
@@ -111,6 +126,8 @@ char* checkAndGetString(Isolate* isolate, v8::Local<v8::Value> value);
  }
 
  void glue_set_server(const FunctionCallbackInfo<Value>& args) {
+ 	if(isLogging == 0)return;
+
  	Isolate* isolate = Isolate::GetCurrent();
  	HandleScope scope(isolate);
 
@@ -143,6 +160,8 @@ char* checkAndGetString(Isolate* isolate, v8::Local<v8::Value> value);
  * args[1] <String> transaction name
  */
  void glue_new_transaction(const FunctionCallbackInfo<Value>& args) {
+ 	if(isLogging == 0)return;
+
  	Isolate* isolate = prepareIsolate(args, 2);
  	
  	char* type = checkAndGetString(isolate, args[0]);
@@ -158,6 +177,8 @@ char* checkAndGetString(Isolate* isolate, v8::Local<v8::Value> value);
  }
 
  void glue_log_event(const FunctionCallbackInfo<Value>& args) {
+ 	if(isLogging == 0)return;
+
  	Isolate* isolate = prepareIsolate(args, 4);
 
  	char* type = checkAndGetString(isolate, args[0]);
@@ -170,6 +191,8 @@ char* checkAndGetString(Isolate* isolate, v8::Local<v8::Value> value);
  }
 
  void glue_timeout(const FunctionCallbackInfo<Value>& args) {
+ 	if(isLogging == 0)return;
+
  	Isolate* isolate = prepareIsolate(args, 1);
 
  	long ptr = checkAndGetLong(isolate, args[0]);
@@ -180,6 +203,8 @@ char* checkAndGetString(Isolate* isolate, v8::Local<v8::Value> value);
 }
 
 void glue_settimeout(const FunctionCallbackInfo<Value>& args) {
+	if(isLogging == 0)return;
+
 	Isolate* isolate = prepareIsolate(args, 1);
 
 	long ptr = checkAndGetLong(isolate, args[0]);
@@ -190,34 +215,50 @@ void glue_settimeout(const FunctionCallbackInfo<Value>& args) {
 }
 
 void glue_set_log_level(const FunctionCallbackInfo<Value>& args) {
+	if(isLogging == 0)return;
+
 	Isolate* isolate = prepareIsolate(args, 1);
 
-	int log_level = checkAndGetInteger(isolate, args[0]);;
+	int log_level = checkAndGetInteger(isolate, args[0]);
 	set_debug_level(log_level);
 
 	args.GetReturnValue().Set(Number::New(isolate,0)); // return 0 as success
 }
 
+void glue_disable(const FunctionCallbackInfo<Value>& args) {
+	if(isLogging == 0)return;
+
+	Isolate* isolate = prepareIsolate(args, 1);
+
+	isLogging = checkAndGetInteger(isolate, args[0]);
+	printf("%d\n", isLogging);
+
+	args.GetReturnValue().Set(Number::New(isolate,0)); // return 0 as success
+}
+
+
 void Init(Handle<Object> exports) {
+
+	isLogging = 1;
 
 	/* Method Glue */
     /* glue nodejs and c modules and check paramter illegal */
 	/* message.js */
-	NODE_SET_METHOD(exports, "glue_complete", glue_complete);
-	NODE_SET_METHOD(exports, "glue_add_data", glue_add_data);
-	NODE_SET_METHOD(exports, "glue_set_status", glue_set_status);
+	NODE_SET_METHOD(exports, "glue_complete"       , glue_complete);
+	NODE_SET_METHOD(exports, "glue_add_data"       , glue_add_data);
+	NODE_SET_METHOD(exports, "glue_set_status"     , glue_set_status);
 
 	/* span.js */
-	NODE_SET_METHOD(exports, "glue_subTransaction", glue_subTransaction);
-	NODE_SET_METHOD(exports, "glue_new_event", glue_new_event);
+	NODE_SET_METHOD(exports, "glue_subTransaction" , glue_subTransaction);
+	NODE_SET_METHOD(exports, "glue_new_event"      , glue_new_event);
 
 	/* cat.js */
-	NODE_SET_METHOD(exports, "glue_set_domain", glue_set_domain);
-	NODE_SET_METHOD(exports, "glue_set_server", glue_set_server);
+	NODE_SET_METHOD(exports, "glue_set_domain"     , glue_set_domain);
+	NODE_SET_METHOD(exports, "glue_set_server"     , glue_set_server);
 	NODE_SET_METHOD(exports, "glue_new_transaction", glue_new_transaction);
-	NODE_SET_METHOD(exports, "glue_log_event", glue_log_event);
-	NODE_SET_METHOD(exports, "glue_timeout", glue_timeout);
-	NODE_SET_METHOD(exports, "glue_settimeout", glue_settimeout);
+	NODE_SET_METHOD(exports, "glue_log_event"      , glue_log_event);
+	NODE_SET_METHOD(exports, "glue_timeout"        , glue_timeout);
+	NODE_SET_METHOD(exports, "glue_settimeout"     , glue_settimeout);
 
 	/*
 	 * LOG_FATAL    (1)
@@ -225,7 +266,8 @@ void Init(Handle<Object> exports) {
      * LOG_WARN     (3)
      * LOG_INFO     (4)
 	 */
-     NODE_SET_METHOD(exports, "glue_set_log_level", glue_set_log_level);
+     NODE_SET_METHOD(exports, "glue_set_log_level" , glue_set_log_level);
+     NODE_SET_METHOD(exports, "glue_disable", glue_disable);
 
      main_init();
  }

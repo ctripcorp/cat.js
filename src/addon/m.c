@@ -17,6 +17,7 @@ const int SUCCESS_CODE = 1;
 const char TIMEOUT[] = "TIMEOUT";
 int debug_level = 2;
 FILE *dbgstream;
+unsigned long mem_used = 0;
 
 /*
  * cat message protocol field
@@ -272,12 +273,12 @@ struct g_context* setup_context() {
 	strncpy(context->hostname, hostname, 150);
 
 	/* friendly hostname
-	gethostname(hostname, 1023);
-	printf("Hostname: %s\n", hostname);
-	struct hostent* h;
-	h = gethostbyname(hostname);
-	printf("h_name: %s\n", h->h_name);
-	*/
+	 gethostname(hostname, 1023);
+	 printf("Hostname: %s\n", hostname);
+	 struct hostent* h;
+	 h = gethostbyname(hostname);
+	 printf("h_name: %s\n", h->h_name);
+	 */
 
 	LOG(LOG_INFO, "host name:%s", context->hostname);
 
@@ -293,6 +294,7 @@ struct g_context* setup_context() {
 	context->serv->len = 1;
 
 	context->send_on = 1;
+	context->mem_monitor_on = 0;
 
 	return context;
 }
@@ -376,8 +378,14 @@ void c_sleep(unsigned int sec) {
 #endif
 }
 
+void send_metric(int mem_value) {
+
+}
+
 void *zmalloc(const char *file, int line, int size) {
 	void *ptr;
+
+	mem_used+=size;
 
 	ptr = malloc(size);
 	memset(ptr, 0, size);
@@ -391,12 +399,13 @@ void *zmalloc(const char *file, int line, int size) {
 	return (ptr);
 }
 
-void zfree(void* ptr){
+void zfree(void* ptr) {
 	free(ptr);
 }
 
 void *zrealloc(const char *file, int line, void* ptr, int size) {
 	void *_ptr;
+
 	_ptr = realloc(ptr, size);
 
 	if (!_ptr) {

@@ -40,6 +40,7 @@ void encode_line(struct message* msg, struct byte_buf *buf, char type, enum poli
 void encode_message(struct message* msg, struct byte_buf *buf);
 void encode(struct g_context* context, struct byte_buf *buf);
 extern void set_status(struct message* msg, char* status);
+void send_metric(int mem_value);
 
 #ifdef __cplusplus
 }
