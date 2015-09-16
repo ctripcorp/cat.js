@@ -12,10 +12,10 @@ Cat.prototype={
 
 	_initConfig : function(){
 		
-		var _domain = appConfig['domain'] || "catjs";
+		var _domain = appConfig['AppDomain'] || "catjs";
 		addon.glue_set_domain(_domain);
 
-		var _server = appConfig['server'] || ["127.0.0.1"];
+		var _server = appConfig['CatServer'] || ["127.0.0.1"];
 		addon.glue_set_server(_server);
 
 		var _level = appConfig['log_level'] || 1;
