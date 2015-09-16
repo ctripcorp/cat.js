@@ -66,3 +66,6 @@ exp_send "Framework@t.999999\r"
 interact
 
 '
+
+
+#npm publish --registry http://npm.dev.sh.ctripcorp.com:8001

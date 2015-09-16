@@ -1,9 +1,9 @@
 {
   "name": "cat-nodejs",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "cat node client",
   "main": "src/cat.js",
-  "author": "stur",
+  "author": "djshi@ctrip.com",
   "license": "ISC",
   "apidoc": {
     "title": "cat node client document"
@@ -14,12 +14,11 @@
   "dependencies": {
     "bindings": "^1.2.1"
   },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": ""
-    }
-  ],
+  "license": "BSD",
+  "repository": {
+    "type": "git",
+    "url": "git@git.dev.sh.ctripcorp.com:fx-front-end/cat-node-client.git"
+  },
   "devDependencies": {
     "express": "^4.13.3",
     "grunt-karma": "*",
@@ -28,5 +27,6 @@
     "karma-phantomjs-launcher": "*",
     "morgan": "^1.6.1",
     "sprintf-js": "^1.0.3"
-  }
+  },
+  "readmeFilename": "README.md"
 }

@@ -2,7 +2,8 @@
 
 ## Requirements
 
-* node 0.12 
+* node 0.12, node 4.0
+
 
 ## Support Platform
 
