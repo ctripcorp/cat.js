@@ -444,29 +444,22 @@ int read_mark() {
 
 #ifdef _WIN32
 void win_get_format_time(char** buf) {
-	/*
 	 struct timeval2 tv;
 	 struct timezone2 tz;
-	 gettimeofday(&tv, &tz);
 	 struct tm *tm;
-	 if ((tm = localtime(&tv.tv_sec)) != NULL) {
-	 strftime(fmt, sizeof fmt, "%Y-%m-%d %H:%M:%S.%%03d", tm);
-	 sprintf(*buf, fmt, tv.tv_usec);
+	 char buffer[24];
+	 char buffer_temp[100]; /* for int not truncate in windows */
+	 time_t timer;
+
+	 gettimeofday(&tv, &tz);
+	 timer = tv.tv_sec;
+	 tm = localtime(&timer);
+	 if (tm != NULL) {
+		 strftime(buffer, 24, "%Y-%m-%d %H:%M:%S", tm);
+		 sprintf(buffer_temp, "%s.%03d", buffer, tv.tv_usec);
+		 buffer_temp[23] = '\0';
+		 strcpy(*buf, buffer_temp);
 	 }
-	 */
-
-	//TODO workaround for above solution, the precision not correct
-	char fmt[64];
-	time_t timer;
-	char buffer[20];
-	struct tm* tm_info;
-
-	time(&timer);
-	tm_info = localtime(&timer);
-
-	strftime(buffer, 24, "%Y-%m-%d %H:%M:%S", tm_info);
-	strcpy(*buf, buffer);
-	strcat(*buf, ".000");
 }
 
 c_long win_get_tv_usec() {

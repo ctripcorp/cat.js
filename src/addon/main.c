@@ -20,10 +20,15 @@ void test_scenario_multi_message();
 void test_large_trans();
 void test_scenario_trans_error();
 
+#ifdef _WIN32
+void test_win_format_time();
+#endif
+
 int main(void) {
 
 	/* Replace this function to test specified function */
-	test_scenario_trans_error();
+	test_scenario_trans();
+
 #ifdef _WIN32
 	system("pause");
 #endif
@@ -166,6 +171,18 @@ void test_large_trans(){
 }
 
 /******************************** Function Test ********************************/
+
+/* Win format time */
+#ifdef _WIN32
+void test_win_format_time(){
+	char p[200];
+	char* x = p;
+
+	win_get_format_time(&x);
+
+	printf("%s", p);
+}
+#endif
 
 /* LOG */
 void test_LOG() {
