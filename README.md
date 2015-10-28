@@ -13,16 +13,25 @@ This is nodejs addon module which will do node-gpy compile when you install modu
 
 create app.config.js with content
 
+minimun:
 ```javascript
 module.exports={
-	'AppDomain':'nodejs',
-	'CatServer':["127.0.0.1"]
+	'AppDomain':'nodejs'
+};
+```	
+full:
+```javascript
+module.exports={
+	'AppDomain':'123',
+	'CatServer':["10.2.25.213"],
+	'timeout': 10,
+	'log_level': 4
 };
 ```	
 
 ## Installation
 
-npm install cat-nodejs --registry=http://npm.dev.sh.ctripcorp.com:8001
+npm install cat-nodejs --registry=http://192.168.19.59:8001
 
 ## API Document
 
@@ -30,6 +39,7 @@ http://svn.ui.sh.ctripcorp.com:8081/catjsdoc/
 
 ### Usage
 
+Normal:
 ```javascript
 var cat = require("cat-nodejs");
 
@@ -51,4 +61,21 @@ fs.readFile(fileName, function(err, data) {
 	
 });	
 t.end();
+```	
+For http module:
+```javascript
+var http = require('http');
+var cat = require("cat-nodejs");
+
+var server = http.createServer(function (request, response) {
+  
+  setTimeout(function(){
+  	response.writeHead(200, {'Content-Type': 'text/plain'});
+  	response.end('Hello World\n');
+  },1000);
+  
+}).listen(8888);
+
+cat.http(server);
+
 ```	

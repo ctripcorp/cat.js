@@ -96,6 +96,7 @@ typedef struct g_context {
 	char *msg_id;
 	int send_on; /* if send log to cat server, 1 = send */
 	int mem_monitor_on; /* if send memory metric */
+	char* env_type;
 } g_context;
 
 struct byte_buf {
@@ -152,6 +153,7 @@ extern char *buf_ptr;
 extern g_context *context;	/* global context */
 extern void init_ip(struct g_context *context);
 
+bool startsWith(char* base, char* str);
 struct c_string* init_c_string();
 void set_c_string(struct c_string *str, const char *data);
 void cat_c_string(struct c_string *str, const char *data);

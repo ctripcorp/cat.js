@@ -17,7 +17,10 @@ extern "C" {
 
 void add_message(struct message* msg);
 void next_message_id(char** buffer);
+void identify_prod(char* ip);
+char* config_server_url();
 
+extern char* get_config_server_url();
 extern void set_domain(char* domain);
 extern void set_server(const char* server[], int len);
 extern void main_init();

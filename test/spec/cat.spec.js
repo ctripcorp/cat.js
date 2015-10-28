@@ -2,7 +2,7 @@ var http = require('http');
 var fs=require("fs"); 
 var cat = require("../../src/cat");
 
-describe("cat client suite",function(){
+xdescribe("cat client suite",function(){
 	jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
 	it("Transaction", function(done){
@@ -78,30 +78,16 @@ describe("cat client suite",function(){
 
 });
 
-xdescribe("standalone suite",function(){
+describe("standalone suite",function(){
 	it("sub trans timeout",function(done){
-		var fileName='../../src/ccat.cc';
-		var t=cat.span('Root',fileName);
-		var subSpan=t.span('SubTransaction',fileName);
+		var fileName = '../../src/ccat.cc';
+		var t = cat.span('Transaction', fileName);
 		fs.readFile(fileName, function(err, data) {
-			t.event("ReadFile", fileName, "0", "filedata");
 			if(err){
 				t.error(err);
 			}
-
-			fs.readFile(fileName, function(err, data) {
-				if(err){
-					t.error(err);
-				}
-
-				//force root timeout before sub finish
-				setTimeout(function() {
-					subSpan.end();
-					done();
-				}, 8000);
-			});	
+			t.end();
+			done();
 		});	
-		t.timeout(5);
-		t.end();
 	});
 });

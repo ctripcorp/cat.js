@@ -1,28 +1,62 @@
 var addon = require('bindings')('ccat');
 var path= require('path');
+var http = require('http');
 var appConfig=require(path.resolve(__dirname,'./appConfig.js'));
 var Span=require('./span');
 var helper = require('./helper.js');
+var request = require('sync-request');
 
 function Cat(option) {
 	this._initConfig();
 }
 
 Cat.prototype={
+	_sizeTable : [1 << 6,  1 << 7,  1 << 8,  1 << 9, 
+                        1 << 10, 1 << 11, 1 << 12, 1 << 13, 1 << 14, 1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19, 
+                        1 << 20, 1 << 21, 1 << 22, 1 << 23, 1 << 24, 1 << 25, 1 << 26, 1 << 27, 1 << 28],
+
+    _valueTable : ["64",   "128",   "256",   "512", 
+                          "1K",    "2K",    "4K",    "8K",   "16K",   "32K",   "64K",  "128K",  "256K",  "512K", 
+                          "1M",    "2M",    "4M",    "8M",   "16M",   "32M",   "64M", "128M", "256M"],
 
 	_initConfig : function(){
 		
 		var _domain = appConfig['AppDomain'] || "catjs";
 		addon.glue_set_domain(_domain);
 
-		var _server = appConfig['CatServer'] || ["127.0.0.1"];
-		addon.glue_set_server(_server);
-
 		var _level = appConfig['log_level'] || 1;
 		addon.glue_set_log_level(_level);
 
 		var _enable = appConfig['enable'] || 1;
 		addon.glue_disable(_enable);
+
+		var obj = addon.glue_get_config_url();
+		var url = obj.config;
+
+		var res = request('GET', url);
+		var body = res.getBody();
+		var fbResponse = JSON.parse(body);
+
+	    for (var i = 0; i < fbResponse.length; i++) {
+	    	if(fbResponse[i].Name=="CAT_SERVER"){
+	    		console.log(fbResponse[i].Value);
+
+	    		var router = fbResponse[i].Value;
+	    		var resInner = request('GET', router);
+	    		var innerResponse = resInner.getBody();
+		        var servers=[];
+				var arr = innerResponse.toString().split(";");
+				for(var j=0;j<arr.length;j++){
+					var temp = arr[j].split(":");
+					console.log(temp[0]);
+					servers.push(temp[0]);
+				}
+
+				var _server = appConfig['CatServer'] || servers;
+				addon.glue_set_server(_server);
+	    	}
+	    }
+
 	},
 
 	/**
@@ -80,6 +114,37 @@ Cat.prototype={
 	 	}
 
 	 	addon.glue_log_event(type,name,status,keyValuePair);
+	 },
+
+
+	 _GetSizeScale : function (size) {
+		var sizeTable = this._sizeTable;
+		var valueTable = this._valueTable;
+
+        if (size < sizeTable[0]) return "0~" + valueTable[0];
+
+        for (var i = 1; i < sizeTable.length; i++)
+        {
+            if (size < sizeTable[i])
+                return valueTable[i - 1] + "~" + valueTable[i];
+        }
+
+        return ">=" + valueTable[valueTable.length - 1];
+	 },
+
+	/**
+	 * @api {function call} sizeEvent(name,size) sizeEvent
+	 * @apiName sizeEvent
+	 * @apiGroup Cat
+	 * @apiDescription log size event
+	 * @apiParam {String} name
+	 * @apiParam {Long} size
+	 * @apiExample {curl} Example usage:
+	 * cat.sizeEvent("aa",133);
+	 */
+	 sizeEvent : function(name,size){
+	 	var scale = this._GetSizeScale(size);
+	 	this.event(name, scale, "0", "size=" + size);
 	 },
 
 	/**

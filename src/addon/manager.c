@@ -22,6 +22,56 @@ void set_domain(char* domain) {
 	copy_nstr(context->domain, domain);
 }
 
+void identify_prod(char* ip)
+{
+	int i, len;
+	char* servers[] = { "10.168.", "192.168.", "172.22.", "10.11.", "10.99.", "10.15.", "10.9." };
+
+	len = sizeof(servers) / sizeof(servers[0]);
+	for (i = 0; i < len;i++){
+		if (startsWith(ip, servers[i])){
+			context->env_type = "pro";
+			return;
+		}
+	}
+
+	context->env_type = "fws";
+}
+
+char* config_server_url()
+{
+	if (strcmp(context->env_type, "lpt") == 0)
+	{
+		return "http://ws.config.framework.lpt.qa.nt.ctripcorp.com/configws/serviceconfig/configinfoes/get/999999/1";
+	}
+	if (strcmp(context->env_type, "fws") == 0)
+	{
+		return "http://ws.config.framework.fws.qa.nt.ctripcorp.com/configws/serviceconfig/configinfoes/get/999999/1";
+	}
+	if (strcmp(context->env_type, "uat") == 0)
+	{
+		return "http://ws.config.framework.uat.qa.nt.ctripcorp.com/configws/serviceconfig/configinfoes/get/999999/1";
+	}
+	else if (strcmp(context->env_type, "pro") == 0)
+	{
+		return "http://ws.config.framework.ctripcorp.com/configws/serviceconfig/configinfoes/get/999999/1";
+	}
+	else
+	{
+		return "http://ws.config.framework.fws.qa.nt.ctripcorp.com/configws/serviceconfig/configinfoes/get/999999/1";
+	}
+}
+
+char* get_config_server_url(){
+	char* config_url;
+
+	identify_prod(context->env_type);
+
+	config_url = config_server_url();
+
+	return config_url;
+}
+
 void set_server(const char* serv[], int len) {
 
 	int i;

@@ -1,10 +1,10 @@
 {
   "name": "cat-nodejs",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "description": "cat node client",
   "main": "src/cat.js",
   "author": "djshi@ctrip.com",
-  "license": "ISC",
+  "license": "BSD",
   "apidoc": {
     "title": "cat node client document"
   },
@@ -12,9 +12,9 @@
     "test": "jasmine-node test/spec/cat.spec.js"
   },
   "dependencies": {
-    "bindings": "^1.2.1"
+    "bindings": "^1.2.1",
+    "sync-request": "^2.1.0"
   },
-  "license": "BSD",
   "repository": {
     "type": "git",
     "url": "git@git.dev.sh.ctripcorp.com:fx-front-end/cat-node-client.git"

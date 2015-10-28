@@ -46,6 +46,12 @@ struct byte_buf* init_buf() {
 	return buf;
 }
 
+/** detecting whether base is starts with str
+*/
+bool startsWith(char* base, char* str) {
+	return (strstr(base, str) - base) == 0;
+}
+
 /*
  * Purpose: write string to memory
  * Argument  IO  Description
@@ -295,6 +301,7 @@ struct g_context* setup_context() {
 
 	context->send_on = 1;
 	context->mem_monitor_on = 0;
+	context->env_type = "fws";
 
 	return context;
 }

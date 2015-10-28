@@ -176,6 +176,17 @@ static int isLogging;
  	args.GetReturnValue().Set(obj);
  }
 
+  void glue_get_config_url(const FunctionCallbackInfo<Value>& args) {
+  	Isolate* isolate = Isolate::GetCurrent();
+ 	HandleScope scope(isolate);
+ 	
+ 	char *url = config_server_url();
+
+	Local<Object> obj = Object::New(isolate);
+ 	obj->Set(String::NewFromUtf8(isolate, "config"), String::NewFromUtf8(isolate, url));
+ 	args.GetReturnValue().Set(obj);
+ }
+
  void glue_log_event(const FunctionCallbackInfo<Value>& args) {
  	if(isLogging == 0)return;
 
@@ -266,10 +277,12 @@ void Init(Handle<Object> exports) {
      * LOG_WARN     (3)
      * LOG_INFO     (4)
 	 */
-     NODE_SET_METHOD(exports, "glue_set_log_level" , glue_set_log_level);
-     NODE_SET_METHOD(exports, "glue_disable", glue_disable);
+    NODE_SET_METHOD(exports, "glue_set_log_level" , glue_set_log_level);
+    NODE_SET_METHOD(exports, "glue_disable", glue_disable);
 
-     main_init();
+	NODE_SET_METHOD(exports, "glue_get_config_url", glue_get_config_url);
+     
+    main_init();
  }
 
  Isolate* prepareIsolate(const FunctionCallbackInfo<Value>& args, int len){

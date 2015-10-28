@@ -26,8 +26,10 @@ void test_win_format_time();
 
 int main(void) {
 
+	set_debug_level(4);
+
 	/* Replace this function to test specified function */
-	test_scenario_trans();
+	test_main_init();
 
 #ifdef _WIN32
 	system("pause");
@@ -219,6 +221,11 @@ void test_new_event(){
 /* Init Context */
 void test_main_init(){
 	main_init();
+
+	LOG(LOG_INFO, "local ip:%s", context->local_ip);
+	char* url = get_config_server_url();
+	printf("%s", url);
+
 	main_free();
 }
 
