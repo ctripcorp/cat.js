@@ -2,7 +2,7 @@ var http = require('http');
 var fs=require("fs"); 
 var cat = require("../../src/cat");
 
-xdescribe("cat client suite",function(){
+describe("cat client suite",function(){
 	jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
 	it("Transaction", function(done){
@@ -78,7 +78,7 @@ xdescribe("cat client suite",function(){
 
 });
 
-describe("standalone suite",function(){
+xdescribe("standalone suite",function(){
 	it("sub trans timeout",function(done){
 		var fileName = '../../src/ccat.cc';
 		var t = cat.span('Transaction', fileName);

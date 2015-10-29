@@ -48,7 +48,7 @@ struct byte_buf* init_buf() {
 
 /** detecting whether base is starts with str
 */
-bool startsWith(char* base, char* str) {
+int startsWith(char* base, char* str) {
 	return (strstr(base, str) - base) == 0;
 }
 

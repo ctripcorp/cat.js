@@ -140,7 +140,7 @@ Cat.prototype={
 	 * @apiParam {String} name
 	 * @apiParam {Long} size
 	 * @apiExample {curl} Example usage:
-	 * cat.sizeEvent("aa",133);
+	 * cat.sizeEvent("name",133);
 	 */
 	 sizeEvent : function(name,size){
 	 	var scale = this._GetSizeScale(size);
