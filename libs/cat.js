@@ -688,6 +688,8 @@ function fetchServerConfig(){
 					if (item.Name=="CAT_SERVER" && item.Value){
 						asyncTask.add(function(done,router){
 							var tarUrlRouter=url.parse(router);
+							tarUrlRouter.query.domain=appConfig['AppID'];
+							tarUrlRouter=url.parse(url.format(tarUrlRouter));
 							tarUrlRouter.method='GET';
 							var reqRouter=http.request(tarUrlRouter,function(resRouter){
 								resRouter.on('error',errorHandle);
