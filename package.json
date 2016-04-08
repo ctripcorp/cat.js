@@ -1,0 +1,18 @@
+{
+  "name": "cat-nodejs",
+  "version": "0.0.2",
+  "description": "Pure nodejs client for cat",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ctripcorp/cat.js.git"
+  },
+  "author": "cdchu@ctrip.com",
+  "license": "Apache2",
+  "readmeFilename": "README.md"
+}

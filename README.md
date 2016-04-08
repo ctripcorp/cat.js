@@ -1,81 +1,53 @@
-# cat.js
-Javascript client of CAT
+# cat.js #
 
-This is nodejs addon module which will do node-gpy compile when you install modules
+- Version: 0.0.1
+- Author: cdchu@ctrip.com
 
-### support platform
- Mac/Linux/Windows
+## Install ##
 
-### support node version
- node 0.12+
+npm install cat-nodejs
 
-### config file
+## Usage ##
 
-create app.config.js with content
+1. create app.config.js as nodejs module format
 
-minimun:
-```javascript
-module.exports={
-	'AppDomain':'nodejs'
-};
-```	
-full:
-```javascript
-module.exports={
-	'AppDomain':'123',
-	'CatServer':["10.2.25.213"],
-	'timeout': 10,
-	'log_level': 4
-};
-```	
+	     module.exports={
+	     	'AppID':'921821',
+	     	'CatServer.Config.Url':'http://10.0.0.1/catconfig',
+			'CatServer':['10.0.0.1:1234','10.0.0.2:1234']
+	     };
 
-## Installation
+2. require ctriputil
 
-npm install cat-nodejs --registry=http://192.168.19.59:8001
+		var cat=require('cat-nodejs');
 
-## API Document
 
-http://svn.ui.sh.ctripcorp.com:8081/catjsdoc/
+## CAT APIs ##
 
-### Usage
-
-Normal:
-```javascript
-var cat = require("cat-nodejs");
-
-var fileName='file';
-var t = cat.span('SubTransaction', fileName); /* Create Transaction t, which is a root transaction */
-var subSpan = t.span('ReadFile', fileName); /* Create Sub Transaction of t */
-fs.readFile(fileName, function(err, data) {
-	t.event("ReadFile", fileName, "0"); /* Create and event of transaction t */
-	if(err){
-		t.error(err); /* Create and error of transaction t */
-	}
-
-	fs.readFile("not exist", function(err, data) {
-		if(err){
-			subSpan.error(err); /* Create and error of transaction subSpan */
-		}
-		subSpan.end(); /* complete transaction */
-	});	
-	
-});	
-t.end();
-```	
-For http module:
-```javascript
-var http = require('http');
-var cat = require("cat-nodejs");
-
-var server = http.createServer(function (request, response) {
-  
-  setTimeout(function(){
-  	response.writeHead(200, {'Content-Type': 'text/plain'});
-  	response.end('Hello World\n');
-  },1000);
-  
-}).listen(8888);
-
-cat.http(server);
-
-```	
+- **Method** *spanInstance* cat.span(type,name,data)
+	- type as string
+	- name as string
+	- data as string or number or array or object
+- **Method** *self* cat.event(type,name,data)
+	- type as string
+	- name as string
+	- data as string or number or array or object
+- **Method** *self* cat.error(message,stack)
+	- message as string or error
+	- stack as string
+- **Method** *self* CtripUtil.cat.http(server)
+	- server as httpServerInstance
+- **Class** spanInstance
+	- **Method** *spanInstance* spanInstance.span(type,name,data)
+		- type as string
+		- name as string
+		- data as string or number or array or object
+	- **Method** *self* spanInstance.event(type,name,data)
+		- type as string
+		- name as string
+		- data as string or number or array or object
+	- **Method** *self* spanInstance.error(message,stack)
+		- message as string or error
+		- stack as string
+	- **Method** *parent* spanInstance.end()
+		- parent as spanInstance or cat
