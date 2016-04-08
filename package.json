@@ -1,0 +1,32 @@
+{
+  "name": "cat-nodejs",
+  "version": "0.2.0",
+  "description": "cat node client",
+  "main": "src/cat.js",
+  "author": "djshi@ctrip.com",
+  "license": "BSD",
+  "apidoc": {
+    "title": "cat node client document"
+  },
+  "scripts": {
+    "test": "jasmine-node test/spec/cat.spec.js"
+  },
+  "dependencies": {
+    "bindings": "^1.2.1",
+    "sync-request": "^2.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@git.dev.sh.ctripcorp.com:fx-front-end/cat-node-client.git"
+  },
+  "devDependencies": {
+    "express": "^4.13.3",
+    "grunt-karma": "*",
+    "http": "0.0.0",
+    "karma-jasmine": "*",
+    "karma-phantomjs-launcher": "*",
+    "morgan": "^1.6.1",
+    "sprintf-js": "^1.0.3"
+  },
+  "readmeFilename": "README.md"
+}

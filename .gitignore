@@ -1,0 +1,13 @@
+node_modules
+.idea
+bower_components
+.cproject
+.project
+.yo-rc.json
+build.sh
+build
+Debug
+doc
+.DS_Store
+npm-debug.log
+mark.txt
