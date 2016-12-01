@@ -1,6 +1,6 @@
 {
   "name": "cat-nodejs",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Pure nodejs client for cat",
   "main": "index.js",
   "dependencies": {},
