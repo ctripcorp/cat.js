@@ -396,7 +396,7 @@ function createError(err,stack){
 				for (var key in err){
 					if (err.hasOwnProperty(key)){
 						var subErr=createError(err[key]);
-						if (getType(err[key])=='error'){
+						if (cUtil.type(err[key])=='error'){
 							messages.push(''+subErr.message);
 						}
 						stacks.push('['+subErr.message+'] '+subErr.stack);
