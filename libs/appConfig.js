@@ -4,7 +4,7 @@ var appConfigHidden=process.argv.indexOf('__appconfig_hidden')!=-1;
 
 var appConfig={};
 var lastConfigDir='';
-var dirname=path.resolve(".");
+var dirname=__dirname;
 while (dirname!==lastConfigDir){
 	try {
 		var config=path.resolve(dirname,'./app.config.js');
